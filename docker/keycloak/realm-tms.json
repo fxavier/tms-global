@@ -1,0 +1,66 @@
+{
+  "realm": "tms",
+  "enabled": true,
+  "displayName": "TMS",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "ADMIN" },
+      { "name": "GESTOR_FROTA" },
+      { "name": "OPERADOR" },
+      { "name": "MOTORISTA" },
+      { "name": "TECNICO_MANUTENCAO" },
+      { "name": "AUDITOR" },
+      { "name": "RH_INTEGRADOR" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "tms-backend",
+      "name": "TMS Backend",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "secret": "tms-backend-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    },
+    {
+      "clientId": "tms-web",
+      "name": "TMS Web",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@tms.local",
+      "email": "admin@tms.local",
+      "firstName": "TMS",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
+    }
+  ]
+}

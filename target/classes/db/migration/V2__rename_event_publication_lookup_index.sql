@@ -1,0 +1,2 @@
+ALTER INDEX IF EXISTS event_publication_serialized_event_listener_id_completion_date_
+    RENAME TO event_publication_event_listener_completion_idx;

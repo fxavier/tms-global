@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tms_dev
+    username: tms_dev
+    password: tms_dev
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/tms
+          jwk-set-uri: http://localhost:8081/realms/tms/protocol/openid-connect/certs
+
+logging:
+  level:
+    pt.xavier.tms: DEBUG
+    org.hibernate.SQL: DEBUG

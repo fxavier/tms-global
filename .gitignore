@@ -1,0 +1,12 @@
+### Macos ###
+.DS_Store
+
+### IDEs ###
+.idea
+.vscode
+
+### Java ###
+target/
+
+### Node.js ###
+node_modules/
