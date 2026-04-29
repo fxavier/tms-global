@@ -5,6 +5,7 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/activity/service/ActivityServiceTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/activity/service/AllocationValidationServiceTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/actuator/ActuatorHealthTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/alert/scheduler/AlertSchedulerTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/alert/service/AlertServiceTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/driver/controller/DriverEndpointsIntegrationTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/driver/entity/DriverEntityTests.java

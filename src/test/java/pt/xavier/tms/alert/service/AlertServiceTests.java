@@ -3,6 +3,7 @@ package pt.xavier.tms.alert.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import pt.xavier.tms.alert.entity.Alert;
+import pt.xavier.tms.alert.entity.AlertConfiguration;
 import pt.xavier.tms.alert.repository.AlertConfigurationRepository;
 import pt.xavier.tms.alert.repository.AlertRepository;
 import pt.xavier.tms.driver.entity.DriverDocument;
@@ -188,5 +190,54 @@ class AlertServiceTests {
         assertThat(captor.getValue().getAlertType()).isEqualTo(AlertType.MAINTENANCE_OVERDUE);
         assertThat(captor.getValue().getSeverity()).isEqualTo(AlertSeverity.CRITICO);
         assertThat(captor.getValue().getEntityId()).isEqualTo(maintenanceId);
+    }
+
+    @Test
+    void resolveObsoleteAlertsResolvesAlertWhenDocumentIsNoLongerExpired() {
+        UUID documentId = UUID.randomUUID();
+        Alert alert = new Alert();
+        alert.setAlertType(AlertType.DOCUMENT_EXPIRED);
+        alert.setEntityType("VEHICLE_DOCUMENT");
+        alert.setEntityId(documentId);
+        alert.setResolved(false);
+
+        VehicleDocument document = new VehicleDocument();
+        document.setId(documentId);
+        document.setStatus(DocumentStatus.VALIDO);
+        document.setExpiryDate(LocalDate.now().plusDays(30));
+
+        when(alertRepository.findByAlertTypeInAndResolvedFalse(any())).thenReturn(List.of(alert));
+        when(vehicleDocumentRepository.findById(documentId)).thenReturn(Optional.of(document));
+
+        alertService.resolveObsoleteAlerts();
+
+        assertThat(alert.isResolved()).isTrue();
+        assertThat(alert.getResolvedBy()).isEqualTo("SYSTEM");
+        verify(alertRepository).save(alert);
+    }
+
+    @Test
+    void checkDocumentExpiryUsesConfiguredWarningDays() {
+        AlertConfiguration config = AlertConfiguration.defaults(AlertType.DOCUMENT_EXPIRING, "VEHICLE_DOCUMENT");
+        config.setDaysBeforeWarning(10);
+        config.setDaysBeforeCritical(3);
+
+        when(alertConfigRepository.findByAlertTypeAndEntityType(AlertType.DOCUMENT_EXPIRING, "VEHICLE_DOCUMENT"))
+                .thenReturn(Optional.of(config));
+        when(alertConfigRepository.findByAlertTypeAndEntityType(AlertType.DOCUMENT_EXPIRING, "DRIVER_DOCUMENT"))
+                .thenReturn(Optional.empty());
+        when(vehicleDocumentRepository.findByExpiryDateBetweenAndStatusNot(any(), any(), any())).thenReturn(List.of());
+        when(vehicleDocumentRepository.findByExpiryDateBeforeAndStatusNot(any(), any())).thenReturn(List.of());
+        when(driverDocumentRepository.findByExpiryDateBetweenAndStatusNot(any(), any(), any())).thenReturn(List.of());
+        when(driverDocumentRepository.findByExpiryDateBeforeAndStatusNot(any(), any())).thenReturn(List.of());
+
+        alertService.checkDocumentExpiry();
+
+        verify(vehicleDocumentRepository).findByExpiryDateBetweenAndStatusNot(
+                LocalDate.now(),
+                LocalDate.now().plusDays(10),
+                DocumentStatus.CANCELADO
+        );
+        verify(vehicleDocumentRepository, times(1)).findByExpiryDateBeforeAndStatusNot(any(), any());
     }
 }
