@@ -6,6 +6,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,7 +22,11 @@ import pt.xavier.tms.activity.entity.ActivityEvent;
 import pt.xavier.tms.activity.repository.ActivityEventRepository;
 import pt.xavier.tms.activity.repository.ActivityRepository;
 import pt.xavier.tms.shared.enums.ActivityStatus;
+import pt.xavier.tms.shared.enums.ChecklistItemStatus;
 import pt.xavier.tms.shared.exception.BusinessException;
+import pt.xavier.tms.vehicle.entity.ChecklistInspection;
+import pt.xavier.tms.vehicle.entity.ChecklistInspectionItem;
+import pt.xavier.tms.vehicle.entity.Vehicle;
 import pt.xavier.tms.vehicle.repository.ChecklistInspectionRepository;
 import pt.xavier.tms.driver.repository.DriverRepository;
 import pt.xavier.tms.vehicle.repository.VehicleRepository;
@@ -83,6 +88,29 @@ class ActivityServiceTests {
         assertThatThrownBy(() -> activityService.transitionStatus(activityId, new StatusTransitionDto(ActivityStatus.EM_CURSO, null)))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Invalid activity status transition");
+    }
+
+    @Test
+    void transitionPlaneadaToEmCursoWithCriticalChecklistThrowsBusinessException() {
+        UUID activityId = UUID.randomUUID();
+        Activity activity = activity(activityId, ActivityStatus.PLANEADA);
+        Vehicle vehicle = new Vehicle();
+        UUID vehicleId = UUID.randomUUID();
+        vehicle.setId(vehicleId);
+        activity.setVehicle(vehicle);
+
+        ChecklistInspection inspection = new ChecklistInspection();
+        ChecklistInspectionItem item = new ChecklistInspectionItem();
+        item.setCritical(true);
+        item.setStatus(ChecklistItemStatus.AVARIA);
+        inspection.setItems(List.of(item));
+
+        when(activityRepository.findById(activityId)).thenReturn(Optional.of(activity));
+        when(checklistInspectionRepository.findLatestByVehicleId(vehicleId)).thenReturn(Optional.of(inspection));
+
+        assertThatThrownBy(() -> activityService.transitionStatus(activityId, new StatusTransitionDto(ActivityStatus.EM_CURSO, null)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("latest checklist has critical failures");
     }
 
     @Test
