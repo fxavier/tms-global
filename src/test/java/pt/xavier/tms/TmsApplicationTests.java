@@ -14,7 +14,10 @@ import org.springframework.boot.test.context.SpringBootTest;
         "tms.vehicle.controllers.enabled=false",
         "tms.vehicle.services.enabled=false",
         "tms.driver.controllers.enabled=false",
-        "tms.driver.services.enabled=false"
+        "tms.driver.services.enabled=false",
+        "tms.activity.controllers.enabled=false",
+        "tms.activity.services.enabled=false",
+        "tms.alert.services.enabled=false"
 })
 class TmsApplicationTests {
 

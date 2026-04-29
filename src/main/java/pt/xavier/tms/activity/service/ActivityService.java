@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ import pt.xavier.tms.vehicle.repository.ChecklistInspectionRepository;
 import pt.xavier.tms.vehicle.repository.VehicleRepository;
 
 @Service
+@ConditionalOnProperty(name = "tms.activity.services.enabled", havingValue = "true", matchIfMissing = true)
 @Transactional(readOnly = true)
 public class ActivityService {
 

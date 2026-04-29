@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import pt.xavier.tms.vehicle.repository.VehicleDocumentRepository;
 import pt.xavier.tms.vehicle.repository.VehicleRepository;
 
 @Service
+@ConditionalOnProperty(name = "tms.activity.services.enabled", havingValue = "true", matchIfMissing = true)
 @Transactional(readOnly = true)
 public class AllocationValidationService {
 

@@ -15,4 +15,6 @@ public interface MaintenanceRepository extends JpaRepository<MaintenanceRecord, 
     Page<MaintenanceRecord> findByVehicleId(UUID vehicleId, Pageable pageable);
 
     List<MaintenanceRecord> findByNextMaintenanceDateBetween(LocalDate from, LocalDate to);
+
+    List<MaintenanceRecord> findByNextMaintenanceDateBefore(LocalDate date);
 }
