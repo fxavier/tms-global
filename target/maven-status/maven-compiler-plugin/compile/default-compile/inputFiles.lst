@@ -23,6 +23,8 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/entity/AlertConfiguration.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/entity/AuditableEntity.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/package-info.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/repository/AlertConfigurationRepository.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/repository/AlertRepository.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/annotation/Auditable.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/annotation/package-info.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/aspect/AuditAspect.java
