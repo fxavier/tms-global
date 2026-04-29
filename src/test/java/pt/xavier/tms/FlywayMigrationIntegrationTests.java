@@ -187,6 +187,36 @@ class FlywayMigrationIntegrationTests {
                 .contains("idx_activity_events_activity");
     }
 
+    @Test
+    void createsAlertModuleTablesIndexesAndDefaultConfigurations() throws SQLException {
+        migrate();
+
+        assertThat(tableNames()).contains("alerts", "alert_configurations");
+
+        assertThat(tableColumns("alerts"))
+                .containsEntry("id", "uuid")
+                .containsEntry("alert_type", "character varying(50)")
+                .containsEntry("severity", "character varying(20)")
+                .containsEntry("entity_type", "character varying(50)")
+                .containsEntry("entity_id", "uuid")
+                .containsEntry("is_resolved", "boolean")
+                .containsEntry("resolved_at", "timestamp with time zone(6)")
+                .containsEntry("created_by", "character varying(100)");
+
+        assertThat(indexNames("alerts"))
+                .contains("idx_alerts_entity", "idx_alerts_is_resolved", "idx_alerts_severity", "idx_alerts_dedup");
+
+        assertThat(tableColumns("alert_configurations"))
+                .containsEntry("id", "uuid")
+                .containsEntry("alert_type", "character varying(50)")
+                .containsEntry("entity_type", "character varying(50)")
+                .containsEntry("days_before_warning", "integer")
+                .containsEntry("days_before_critical", "integer")
+                .containsEntry("is_active", "boolean");
+
+        assertThat(rowCount("alert_configurations")).isGreaterThanOrEqualTo(3);
+    }
+
     private static void migrate() {
         Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
@@ -291,5 +321,17 @@ class FlywayMigrationIntegrationTests {
         }
 
         return indexes;
+    }
+
+    private static long rowCount(String tableName) throws SQLException {
+        try (var connection = DriverManager.getConnection(
+                POSTGRES.getJdbcUrl(),
+                POSTGRES.getUsername(),
+                POSTGRES.getPassword()
+        ); PreparedStatement statement = connection.prepareStatement("select count(*) from " + tableName);
+             var resultSet = statement.executeQuery()) {
+            resultSet.next();
+            return resultSet.getLong(1);
+        }
     }
 }
