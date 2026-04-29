@@ -43,3 +43,11 @@ management:
     web:
       exposure:
         include: health
+
+tms:
+  security:
+    rate-limit:
+      enabled: ${TMS_SECURITY_RATE_LIMIT_ENABLED:true}
+      capacity: ${TMS_SECURITY_RATE_LIMIT_CAPACITY:60}
+      refill-tokens: ${TMS_SECURITY_RATE_LIMIT_REFILL_TOKENS:60}
+      refill-period-seconds: ${TMS_SECURITY_RATE_LIMIT_REFILL_PERIOD_SECONDS:60}

@@ -5,7 +5,12 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/driver/package-info.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/integration/package-info.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/config/JpaAuditingConfig.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/config/RateLimitConfig.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/config/SecurityConfig.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/filter/RateLimitFilter.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/jwt/KeycloakJwtAuthenticationConverter.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/package-info.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/util/SecurityUtils.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/dto/ApiResponse.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/dto/PagedResponse.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/enums/AccessoryStatus.java
