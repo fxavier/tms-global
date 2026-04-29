@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: pt.xavier.tms.TmsApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 49.80 s -- in pt.xavier.tms.TmsApplicationTests
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.927 s -- in pt.xavier.tms.TmsApplicationTests
