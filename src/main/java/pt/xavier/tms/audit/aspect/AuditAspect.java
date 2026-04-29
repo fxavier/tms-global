@@ -1,6 +1,10 @@
 package pt.xavier.tms.audit.aspect;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.RecordComponent;
+import java.time.temporal.Temporal;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,11 +61,25 @@ public class AuditAspect {
     }
 
     private Map<String, Object> captureArgsSnapshot(Object[] args, AuditOperation operation) {
-        return null;
+        if (operation == AuditOperation.CRIACAO || args == null || args.length == 0) {
+            return null;
+        }
+
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("args", List.of(args).stream().map(this::sanitizeValue).toList());
+        return snapshot;
     }
 
     private Map<String, Object> captureResultSnapshot(Object result, AuditOperation operation) {
-        return null;
+        if (operation == AuditOperation.ELIMINACAO) {
+            return Map.of("deleted", true);
+        }
+
+        if (result == null) {
+            return null;
+        }
+
+        return Map.of("result", sanitizeValue(result));
     }
 
     private Optional<UUID> extractEntityIdFromArguments(Object[] args) {
@@ -89,6 +107,31 @@ public class AuditAspect {
         } catch (ReflectiveOperationException ignored) {
             return null;
         }
+    }
+
+    private Object sanitizeValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof String || value instanceof Number || value instanceof Boolean || value instanceof Enum<?> || value instanceof UUID || value instanceof Temporal) {
+            return value;
+        }
+
+        Class<?> type = value.getClass();
+        if (type.isRecord()) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            for (RecordComponent component : type.getRecordComponents()) {
+                try {
+                    map.put(component.getName(), sanitizeValue(component.getAccessor().invoke(value)));
+                } catch (ReflectiveOperationException ignored) {
+                    map.put(component.getName(), "<unavailable>");
+                }
+            }
+            return map;
+        }
+
+        return String.valueOf(value);
     }
 
 

@@ -1,18 +1,23 @@
 package pt.xavier.tms.audit.repository;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
 import pt.xavier.tms.audit.entity.AuditLog;
 import pt.xavier.tms.shared.enums.AuditOperation;
 
-public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
+public interface AuditLogRepository extends Repository<AuditLog, UUID> {
+
+    AuditLog save(AuditLog log);
+
+    Optional<AuditLog> findById(UUID id);
 
     @Query("""
             select a
