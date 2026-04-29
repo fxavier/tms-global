@@ -417,7 +417,7 @@ Este plano de implementação converte o design técnico do TMS numa sequência 
     - Testar que não existe endpoint para alterar ou eliminar registos de auditoria (HTTP 405 ou 404)
     - _Requisitos: 12.1, 12.2, 12.3, 12.4_
 
-- [ ] 46. Checkpoint — Módulo Audit completo
+- [x] 46. Checkpoint — Módulo Audit completo
   - Verificar que criação de viatura gera registo de auditoria com `operation = CRIACAO`
   - Verificar que atualização de estado de atividade gera registo com valores anteriores e novos
   - Verificar que nenhum endpoint permite alterar ou eliminar registos de auditoria
