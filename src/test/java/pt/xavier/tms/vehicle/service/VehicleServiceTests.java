@@ -83,6 +83,19 @@ class VehicleServiceTests {
     }
 
     @Test
+    void updateStatusAllowsTransitionToDecommissioned() {
+        UUID vehicleId = UUID.randomUUID();
+        Vehicle vehicle = new Vehicle();
+        vehicle.setId(vehicleId);
+        vehicle.setStatus(VehicleStatus.DISPONIVEL);
+        when(vehicleRepository.findById(vehicleId)).thenReturn(Optional.of(vehicle));
+
+        Vehicle updated = vehicleService.updateStatus(vehicleId, VehicleStatus.ABATIDA);
+
+        assertThat(updated.getStatus()).isEqualTo(VehicleStatus.ABATIDA);
+    }
+
+    @Test
     void createVehicleStoresDefaultStatusWhenNotProvided() {
         VehicleCreateDto dto = createDto("CC-22-DD");
         Vehicle mappedVehicle = new Vehicle();

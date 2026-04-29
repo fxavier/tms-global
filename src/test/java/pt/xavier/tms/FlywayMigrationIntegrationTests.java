@@ -120,6 +120,34 @@ class FlywayMigrationIntegrationTests {
                 );
     }
 
+    @Test
+    void createsDriverModuleTablesAndIndexes() throws SQLException {
+        migrate();
+
+        assertThat(tableNames()).contains("drivers", "driver_documents");
+
+        assertThat(tableColumns("drivers"))
+                .containsEntry("id", "uuid")
+                .containsEntry("full_name", "character varying(200)")
+                .containsEntry("id_number", "character varying(50)")
+                .containsEntry("license_number", "character varying(50)")
+                .containsEntry("status", "character varying(30)")
+                .containsEntry("deleted_at", "timestamp with time zone(6)");
+
+        assertThat(tableColumns("driver_documents"))
+                .containsEntry("driver_id", "uuid")
+                .containsEntry("document_type", "character varying(40)")
+                .containsEntry("status", "character varying(40)")
+                .containsEntry("file_id", "uuid")
+                .containsEntry("deleted_by", "character varying(100)");
+
+        assertThat(indexNames("drivers"))
+                .contains("idx_drivers_status", "idx_drivers_license_expiry", "idx_drivers_location");
+
+        assertThat(indexNames("driver_documents"))
+                .contains("idx_driver_docs_driver", "idx_driver_docs_expiry");
+    }
+
     private static void migrate() {
         Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())

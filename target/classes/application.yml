@@ -62,3 +62,12 @@ tms:
       capacity: ${TMS_SECURITY_RATE_LIMIT_CAPACITY:60}
       refill-tokens: ${TMS_SECURITY_RATE_LIMIT_REFILL_TOKENS:60}
       refill-period-seconds: ${TMS_SECURITY_RATE_LIMIT_REFILL_PERIOD_SECONDS:60}
+  integration:
+    rh:
+      mode: ${TMS_INTEGRATION_RH_MODE:module}
+      base-url: ${TMS_INTEGRATION_RH_BASE_URL:http://localhost:8082}
+      availability-path: ${TMS_INTEGRATION_RH_AVAILABILITY_PATH:/api/v1/drivers/availability}
+      api-key: ${TMS_INTEGRATION_RH_API_KEY:}
+      cache-ttl-minutes: ${TMS_INTEGRATION_RH_CACHE_TTL_MINUTES:5}
+      connect-timeout-millis: ${TMS_INTEGRATION_RH_CONNECT_TIMEOUT_MILLIS:3000}
+      read-timeout-millis: ${TMS_INTEGRATION_RH_READ_TIMEOUT_MILLIS:5000}

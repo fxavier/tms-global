@@ -12,7 +12,9 @@ import org.springframework.boot.test.context.SpringBootTest;
         "tms.jpa.auditing.enabled=false",
         "tms.audit.enabled=false",
         "tms.vehicle.controllers.enabled=false",
-        "tms.vehicle.services.enabled=false"
+        "tms.vehicle.services.enabled=false",
+        "tms.driver.controllers.enabled=false",
+        "tms.driver.services.enabled=false"
 })
 class TmsApplicationTests {
 

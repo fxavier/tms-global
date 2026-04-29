@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
-@EnableConfigurationProperties(FileStorageConfig.class)
+@EnableConfigurationProperties({FileStorageConfig.class, RhIntegrationConfig.class})
 public class IntegrationConfig {
 
     @Bean

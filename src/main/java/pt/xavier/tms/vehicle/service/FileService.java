@@ -32,7 +32,6 @@ public class FileService {
     public FileRecord upload(MultipartFile file) {
         FileUploadResultDto uploadResult = fileStoragePort.upload(file);
         FileRecord fileRecord = new FileRecord();
-        fileRecord.setId(uploadResult.id());
         fileRecord.setOriginalFilename(uploadResult.originalFilename());
         fileRecord.setStorageKey(uploadResult.storageKey());
         fileRecord.setContentType(uploadResult.contentType());

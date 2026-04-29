@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -53,6 +55,12 @@ public class GlobalExceptionHandler {
                         "Request validation failed",
                         fields
                 )));
+    }
+
+    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+    ResponseEntity<ApiResponse<Void>> handleAccessDenied(Exception exception) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.failure(ErrorResponse.of("ACCESS_DENIED", "Access is denied")));
     }
 
     @ExceptionHandler(Exception.class)

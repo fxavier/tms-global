@@ -2,6 +2,11 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/ModulithArchitectureTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/TmsApplicationTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/actuator/ActuatorHealthTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/driver/controller/DriverEndpointsIntegrationTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/driver/entity/DriverEntityTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/driver/entity/DriverJpaMappingIntegrationTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/driver/service/DriverServiceTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/integration/rh/RhRestAdapterTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/integration/storage/LocalFileStorageAdapterTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/security/config/JpaAuditingConfigTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/security/filter/RateLimitFilterTests.java
@@ -11,6 +16,7 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/shared/exception/GlobalExceptionHandlerTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/shared/util/CodeGeneratorTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/controller/VehicleControllerTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/controller/VehicleEndpointsIntegrationTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/entity/VehicleEntityTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/entity/VehicleJpaMappingIntegrationTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/repository/VehicleRepositoryIntegrationTests.java

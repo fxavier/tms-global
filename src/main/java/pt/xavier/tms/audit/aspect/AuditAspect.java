@@ -1,13 +1,10 @@
 package pt.xavier.tms.audit.aspect;
 
 import java.lang.reflect.Method;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -30,13 +27,10 @@ public class AuditAspect {
 
     private static final String SYSTEM_USER = "system";
     private static final String UNKNOWN_IP = "unknown";
-
     private final ApplicationEventPublisher eventPublisher;
-    private final ObjectMapper objectMapper;
 
-    public AuditAspect(ApplicationEventPublisher eventPublisher, ObjectMapper objectMapper) {
+    public AuditAspect(ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
-        this.objectMapper = objectMapper;
     }
 
     @Around("@annotation(auditable)")
@@ -63,33 +57,11 @@ public class AuditAspect {
     }
 
     private Map<String, Object> captureArgsSnapshot(Object[] args, AuditOperation operation) {
-        if (operation == AuditOperation.CRIACAO) {
-            return null;
-        }
-
-        Object source = firstNonScalarArgument(args).orElse(null);
-        return source == null ? null : toMap(source);
+        return null;
     }
 
     private Map<String, Object> captureResultSnapshot(Object result, AuditOperation operation) {
-        if (operation == AuditOperation.ELIMINACAO || result == null) {
-            return null;
-        }
-
-        return toMap(result);
-    }
-
-    private Optional<Object> firstNonScalarArgument(Object[] args) {
-        for (Object arg : args) {
-            if (arg == null) {
-                continue;
-            }
-            if (!(arg instanceof UUID) && !(arg instanceof CharSequence) && !(arg instanceof Number)
-                    && !(arg instanceof Enum<?>)) {
-                return Optional.of(arg);
-            }
-        }
-        return Optional.empty();
+        return null;
     }
 
     private Optional<UUID> extractEntityIdFromArguments(Object[] args) {
@@ -119,10 +91,6 @@ public class AuditAspect {
         }
     }
 
-    private Map<String, Object> toMap(Object source) {
-        return objectMapper.convertValue(source, new TypeReference<>() {
-        });
-    }
 
     private String resolveCurrentUser() {
         return Optional.ofNullable(org.springframework.security.core.context.SecurityContextHolder.getContext())
