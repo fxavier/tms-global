@@ -52,6 +52,49 @@ class FlywayMigrationIntegrationTests {
                 );
     }
 
+    @Test
+    void createsVehicleModuleTablesAndIndexes() throws SQLException {
+        migrate();
+
+        assertThat(tableNames()).contains(
+                "files",
+                "vehicles",
+                "vehicle_documents",
+                "vehicle_accessories",
+                "maintenance_records",
+                "checklist_templates",
+                "checklist_template_items",
+                "checklist_inspections",
+                "checklist_inspection_items"
+        );
+
+        assertThat(tableColumns("vehicles"))
+                .containsEntry("id", "uuid")
+                .containsEntry("plate", "character varying(20)")
+                .containsEntry("current_driver_id", "uuid")
+                .containsEntry("deleted_at", "timestamp with time zone(6)");
+
+        assertThat(tableColumns("vehicle_documents"))
+                .containsEntry("vehicle_id", "uuid")
+                .containsEntry("file_id", "uuid")
+                .containsEntry("deleted_by", "character varying(100)");
+
+        assertThat(indexNames("vehicles"))
+                .contains("idx_vehicles_plate", "idx_vehicles_status", "idx_vehicles_plate_trgm");
+
+        assertThat(indexNames("vehicle_documents"))
+                .contains("idx_vehicle_docs_expiry", "idx_vehicle_docs_status");
+
+        assertThat(indexNames("vehicle_accessories"))
+                .contains("idx_vehicle_accessories_vehicle", "uk_vehicle_accessories_vehicle_type");
+
+        assertThat(indexNames("maintenance_records"))
+                .contains("idx_maintenance_vehicle", "idx_maintenance_next_date");
+
+        assertThat(indexNames("checklist_inspections"))
+                .contains("idx_checklist_inspections_vehicle");
+    }
+
     private static void migrate() {
         Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
@@ -109,6 +152,28 @@ class FlywayMigrationIntegrationTests {
         }
 
         return columns;
+    }
+
+    private static Set<String> tableNames() throws SQLException {
+        Set<String> tables = new HashSet<>();
+
+        try (var connection = DriverManager.getConnection(
+                POSTGRES.getJdbcUrl(),
+                POSTGRES.getUsername(),
+                POSTGRES.getPassword()
+        ); var statement = connection.createStatement();
+             var resultSet = statement.executeQuery("""
+                     select table_name
+                     from information_schema.tables
+                     where table_schema = 'public'
+                       and table_type = 'BASE TABLE'
+                     """)) {
+            while (resultSet.next()) {
+                tables.add(resultSet.getString("table_name"));
+            }
+        }
+
+        return tables;
     }
 
     private static Set<String> indexNames(String tableName) throws SQLException {
