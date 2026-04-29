@@ -107,16 +107,16 @@ class FlywayMigrationIntegrationTests {
                 .containsEntry("operation", "character varying(30)")
                 .containsEntry("performed_by", "character varying(100)")
                 .containsEntry("ip_address", "character varying(64)")
-                .containsEntry("occurred_at", "timestamp with time zone(6)")
+                .containsEntry("created_at", "timestamp with time zone(6)")
                 .containsEntry("previous_values", "jsonb")
                 .containsEntry("new_values", "jsonb");
 
         assertThat(indexNames("audit_logs"))
                 .contains(
-                        "idx_audit_logs_entity_type",
-                        "idx_audit_logs_operation",
-                        "idx_audit_logs_performed_by",
-                        "idx_audit_logs_occurred_at"
+                        "idx_audit_entity",
+                        "idx_audit_operation",
+                        "idx_audit_performed_by",
+                        "idx_audit_performed_at"
                 );
     }
 

@@ -55,7 +55,7 @@ public class AuditLog {
     @Column(name = "new_values", columnDefinition = "jsonb")
     private Map<String, Object> newValues;
 
-    @Column(name = "occurred_at", nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant occurredAt;
 
     public static AuditLog of(
