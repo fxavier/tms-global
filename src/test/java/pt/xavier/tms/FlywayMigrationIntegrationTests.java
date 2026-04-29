@@ -95,6 +95,31 @@ class FlywayMigrationIntegrationTests {
                 .contains("idx_checklist_inspections_vehicle");
     }
 
+    @Test
+    void createsAuditLogTableAndIndexes() throws SQLException {
+        migrate();
+
+        assertThat(tableNames()).contains("audit_logs");
+
+        assertThat(tableColumns("audit_logs"))
+                .containsEntry("id", "uuid")
+                .containsEntry("entity_type", "character varying(100)")
+                .containsEntry("operation", "character varying(30)")
+                .containsEntry("performed_by", "character varying(100)")
+                .containsEntry("ip_address", "character varying(64)")
+                .containsEntry("occurred_at", "timestamp with time zone(6)")
+                .containsEntry("previous_values", "jsonb")
+                .containsEntry("new_values", "jsonb");
+
+        assertThat(indexNames("audit_logs"))
+                .contains(
+                        "idx_audit_logs_entity_type",
+                        "idx_audit_logs_operation",
+                        "idx_audit_logs_performed_by",
+                        "idx_audit_logs_occurred_at"
+                );
+    }
+
     private static void migrate() {
         Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
