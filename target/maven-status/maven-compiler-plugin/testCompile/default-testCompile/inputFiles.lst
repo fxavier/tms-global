@@ -12,3 +12,7 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/entity/VehicleEntityTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/entity/VehicleJpaMappingIntegrationTests.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/repository/VehicleRepositoryIntegrationTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/service/ChecklistServiceTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/service/MaintenanceServiceTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/service/VehicleDocumentServiceTests.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/test/java/pt/xavier/tms/vehicle/service/VehicleServiceTests.java
