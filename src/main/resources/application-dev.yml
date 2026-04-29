@@ -14,3 +14,9 @@ logging:
   level:
     pt.xavier.tms: DEBUG
     org.hibernate.SQL: DEBUG
+
+tms:
+  storage:
+    type: local
+    local:
+      base-path: ./storage/uploads

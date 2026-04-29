@@ -48,6 +48,14 @@ management:
         include: health,info,metrics,prometheus
 
 tms:
+  storage:
+    type: ${TMS_STORAGE_TYPE:local}
+    max-file-size-bytes: ${TMS_STORAGE_MAX_FILE_SIZE_BYTES:10485760}
+    local:
+      base-path: ${TMS_STORAGE_LOCAL_BASE_PATH:./storage/uploads}
+    s3:
+      bucket: ${TMS_STORAGE_S3_BUCKET:}
+      prefix: ${TMS_STORAGE_S3_PREFIX:uploads/}
   security:
     rate-limit:
       enabled: ${TMS_SECURITY_RATE_LIMIT_ENABLED:true}

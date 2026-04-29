@@ -1,10 +1,10 @@
-pt/xavier/tms/activity/package-info.class
 pt/xavier/tms/driver/package-info.class
-pt/xavier/tms/alert/package-info.class
-pt/xavier/tms/TmsApplication.class
 pt/xavier/tms/security/package-info.class
 pt/xavier/tms/vehicle/package-info.class
+pt/xavier/tms/shared/package-info.class
+pt/xavier/tms/activity/package-info.class
+pt/xavier/tms/alert/package-info.class
+pt/xavier/tms/TmsApplication.class
 pt/xavier/tms/audit/package-info.class
 pt/xavier/tms/security/config/JpaAuditingConfig.class
 pt/xavier/tms/integration/package-info.class
-pt/xavier/tms/shared/package-info.class
