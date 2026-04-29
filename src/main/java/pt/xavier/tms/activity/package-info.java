@@ -1,4 +1,11 @@
 @org.springframework.modulith.ApplicationModule(
-        allowedDependencies = {"shared", "vehicle", "driver", "integration", "audit"}
+        allowedDependencies = {
+                "shared",
+                "vehicle::entity",
+                "driver::entity",
+                "integration::port",
+                "integration::dto",
+                "audit::annotation"
+        }
 )
 package pt.xavier.tms.activity;
