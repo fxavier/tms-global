@@ -1,5 +1,6 @@
 package pt.xavier.tms.activity.entity;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -14,6 +15,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import jakarta.persistence.EntityListeners;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,8 +28,9 @@ import pt.xavier.tms.shared.enums.ActivityStatus;
 @Setter
 @Entity
 @Table(name = "activity_events")
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
-public class ActivityEvent extends AuditableEntity {
+public class ActivityEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -53,4 +59,12 @@ public class ActivityEvent extends AuditableEntity {
 
     @Column(name = "notes")
     private String notes;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @CreatedBy
+    @Column(name = "created_by", nullable = false, length = 100, updatable = false)
+    private String createdBy;
 }

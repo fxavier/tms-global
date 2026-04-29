@@ -85,7 +85,7 @@ public class AllocationValidationService {
         checklistInspectionRepository.findLatestByVehicleId(vehicleId)
                 .filter(inspection -> inspection.hasCriticalFailures())
                 .ifPresent(inspection -> blockers.add(blocker(
-                        "VEHICLE_CHECKLIST_CRITICAL_FAILURE",
+                        "CHECKLIST_CRITICAL_FAILURE",
                         "Latest vehicle checklist has critical failures"
                 )));
 
@@ -122,13 +122,13 @@ public class AllocationValidationService {
 
         activityRepository.findConflictingActivitiesForVehicle(vehicleId, plannedStart, plannedEnd, activityId)
                 .forEach(activity -> blockers.add(blocker(
-                        "VEHICLE_SCHEDULE_CONFLICT",
+                        "VEHICLE_ALLOCATION_CONFLICT",
                         "Vehicle already allocated to activity " + activity.getCode()
                 )));
 
         activityRepository.findConflictingActivitiesForDriver(driverId, plannedStart, plannedEnd, activityId)
                 .forEach(activity -> blockers.add(blocker(
-                        "DRIVER_SCHEDULE_CONFLICT",
+                        "DRIVER_ALLOCATION_CONFLICT",
                         "Driver already allocated to activity " + activity.getCode()
                 )));
 
