@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,13 +57,15 @@ public class AuditService {
             LocalDate to,
             Pageable pageable
     ) {
-        return auditLogRepository.findByFilters(
-                blankToNull(entityType),
-                entityId,
-                operation,
-                blankToNull(performedBy),
-                toStartOfDay(from),
-                toEndOfDay(to),
+        return auditLogRepository.findAll(
+                buildSpecification(
+                        blankToNull(entityType),
+                        entityId,
+                        operation,
+                        blankToNull(performedBy),
+                        toStartOfDay(from),
+                        toEndOfDay(to)
+                ),
                 pageable
         );
     }
@@ -85,5 +88,37 @@ public class AuditService {
         return date == null
                 ? null
                 : date.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().minusNanos(1);
+    }
+
+    private static Specification<AuditLog> buildSpecification(
+            String entityType,
+            UUID entityId,
+            AuditOperation operation,
+            String performedBy,
+            Instant from,
+            Instant to
+    ) {
+        return (root, query, cb) -> {
+            var predicate = cb.conjunction();
+            if (entityType != null) {
+                predicate = cb.and(predicate, cb.equal(root.get("entityType"), entityType));
+            }
+            if (entityId != null) {
+                predicate = cb.and(predicate, cb.equal(root.get("entityId"), entityId));
+            }
+            if (operation != null) {
+                predicate = cb.and(predicate, cb.equal(root.get("operation"), operation));
+            }
+            if (performedBy != null) {
+                predicate = cb.and(predicate, cb.equal(root.get("performedBy"), performedBy));
+            }
+            if (from != null) {
+                predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("occurredAt"), from));
+            }
+            if (to != null) {
+                predicate = cb.and(predicate, cb.lessThanOrEqualTo(root.get("occurredAt"), to));
+            }
+            return predicate;
+        };
     }
 }

@@ -42,7 +42,7 @@ class FlywayMigrationIntegrationTests {
                 .containsEntry("event_type", "character varying(255)")
                 .containsEntry("listener_id", "character varying(255)")
                 .containsEntry("publication_date", "timestamp with time zone(6)")
-                .containsEntry("serialized_event", "character varying(255)");
+                .containsEntry("serialized_event", "text");
 
         assertThat(indexNames("event_publication"))
                 .contains(
