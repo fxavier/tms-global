@@ -148,6 +148,45 @@ class FlywayMigrationIntegrationTests {
                 .contains("idx_driver_docs_driver", "idx_driver_docs_expiry");
     }
 
+    @Test
+    void createsActivityModuleTablesAndIndexes() throws SQLException {
+        migrate();
+
+        assertThat(tableNames()).contains("activities", "activity_events");
+
+        assertThat(tableColumns("activities"))
+                .containsEntry("id", "uuid")
+                .containsEntry("code", "character varying(30)")
+                .containsEntry("activity_type", "character varying(100)")
+                .containsEntry("priority", "character varying(20)")
+                .containsEntry("status", "character varying(20)")
+                .containsEntry("vehicle_id", "uuid")
+                .containsEntry("driver_id", "uuid")
+                .containsEntry("rh_override_justification", "text")
+                .containsEntry("deleted_at", "timestamp with time zone(6)");
+
+        assertThat(tableColumns("activity_events"))
+                .containsEntry("id", "uuid")
+                .containsEntry("activity_id", "uuid")
+                .containsEntry("event_type", "character varying(50)")
+                .containsEntry("previous_status", "character varying(20)")
+                .containsEntry("new_status", "character varying(20)")
+                .containsEntry("performed_by", "character varying(100)")
+                .containsEntry("performed_at", "timestamp with time zone(6)");
+
+        assertThat(indexNames("activities"))
+                .contains(
+                        "idx_activities_status",
+                        "idx_activities_vehicle",
+                        "idx_activities_driver",
+                        "idx_activities_planned_start",
+                        "idx_activities_code"
+                );
+
+        assertThat(indexNames("activity_events"))
+                .contains("idx_activity_events_activity");
+    }
+
     private static void migrate() {
         Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
