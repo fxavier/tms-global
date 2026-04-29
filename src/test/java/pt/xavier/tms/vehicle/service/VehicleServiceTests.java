@@ -19,6 +19,10 @@ import pt.xavier.tms.shared.enums.VehicleStatus;
 import pt.xavier.tms.shared.exception.BusinessException;
 import pt.xavier.tms.vehicle.dto.VehicleCreateDto;
 import pt.xavier.tms.vehicle.entity.Vehicle;
+import pt.xavier.tms.vehicle.mapper.ChecklistMapper;
+import pt.xavier.tms.vehicle.mapper.MaintenanceMapper;
+import pt.xavier.tms.vehicle.mapper.VehicleDocumentMapper;
+import pt.xavier.tms.vehicle.mapper.VehicleMapper;
 import pt.xavier.tms.vehicle.repository.VehicleRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +30,18 @@ class VehicleServiceTests {
 
     @Mock
     private VehicleRepository vehicleRepository;
+
+    @Mock
+    private VehicleMapper vehicleMapper;
+
+    @Mock
+    private VehicleDocumentMapper vehicleDocumentMapper;
+
+    @Mock
+    private MaintenanceMapper maintenanceMapper;
+
+    @Mock
+    private ChecklistMapper checklistMapper;
 
     @InjectMocks
     private VehicleService vehicleService;
@@ -69,7 +85,10 @@ class VehicleServiceTests {
     @Test
     void createVehicleStoresDefaultStatusWhenNotProvided() {
         VehicleCreateDto dto = createDto("CC-22-DD");
+        Vehicle mappedVehicle = new Vehicle();
+        mappedVehicle.setPlate(dto.plate());
         when(vehicleRepository.existsByPlate("CC-22-DD")).thenReturn(false);
+        when(vehicleMapper.toEntity(dto)).thenReturn(mappedVehicle);
         when(vehicleRepository.save(org.mockito.ArgumentMatchers.any(Vehicle.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 

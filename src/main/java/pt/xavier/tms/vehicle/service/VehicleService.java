@@ -24,6 +24,10 @@ import pt.xavier.tms.vehicle.entity.ChecklistInspection;
 import pt.xavier.tms.vehicle.entity.MaintenanceRecord;
 import pt.xavier.tms.vehicle.entity.Vehicle;
 import pt.xavier.tms.vehicle.entity.VehicleDocument;
+import pt.xavier.tms.vehicle.mapper.ChecklistMapper;
+import pt.xavier.tms.vehicle.mapper.MaintenanceMapper;
+import pt.xavier.tms.vehicle.mapper.VehicleDocumentMapper;
+import pt.xavier.tms.vehicle.mapper.VehicleMapper;
 import pt.xavier.tms.vehicle.repository.VehicleRepository;
 
 @Service
@@ -34,9 +38,23 @@ public class VehicleService {
     private static final String VEHICLE_ENTITY_TYPE = "VEHICLE";
 
     private final VehicleRepository vehicleRepository;
+    private final VehicleMapper vehicleMapper;
+    private final VehicleDocumentMapper vehicleDocumentMapper;
+    private final MaintenanceMapper maintenanceMapper;
+    private final ChecklistMapper checklistMapper;
 
-    public VehicleService(VehicleRepository vehicleRepository) {
+    public VehicleService(
+            VehicleRepository vehicleRepository,
+            VehicleMapper vehicleMapper,
+            VehicleDocumentMapper vehicleDocumentMapper,
+            MaintenanceMapper maintenanceMapper,
+            ChecklistMapper checklistMapper
+    ) {
         this.vehicleRepository = vehicleRepository;
+        this.vehicleMapper = vehicleMapper;
+        this.vehicleDocumentMapper = vehicleDocumentMapper;
+        this.maintenanceMapper = maintenanceMapper;
+        this.checklistMapper = checklistMapper;
     }
 
     @Auditable(entityType = VEHICLE_ENTITY_TYPE, operation = AuditOperation.CRIACAO)
@@ -46,17 +64,8 @@ public class VehicleService {
             throw new BusinessException("DUPLICATE_VEHICLE_PLATE", "Vehicle plate already exists");
         }
 
-        Vehicle vehicle = new Vehicle();
-        vehicle.setPlate(dto.plate());
-        vehicle.setBrand(dto.brand());
-        vehicle.setModel(dto.model());
-        vehicle.setVehicleType(dto.vehicleType());
-        vehicle.setCapacity(dto.capacity());
-        vehicle.setActivityLocation(dto.activityLocation());
-        vehicle.setActivityStartDate(dto.activityStartDate());
+        Vehicle vehicle = vehicleMapper.toEntity(dto);
         vehicle.setStatus(dto.status() == null ? VehicleStatus.DISPONIVEL : dto.status());
-        vehicle.setCurrentDriverId(dto.currentDriverId());
-        vehicle.setNotes(dto.notes());
         return vehicleRepository.save(vehicle);
     }
 
@@ -70,15 +79,7 @@ public class VehicleService {
                     throw new BusinessException("DUPLICATE_VEHICLE_PLATE", "Vehicle plate already exists");
                 });
 
-        vehicle.setPlate(dto.plate());
-        vehicle.setBrand(dto.brand());
-        vehicle.setModel(dto.model());
-        vehicle.setVehicleType(dto.vehicleType());
-        vehicle.setCapacity(dto.capacity());
-        vehicle.setActivityLocation(dto.activityLocation());
-        vehicle.setActivityStartDate(dto.activityStartDate());
-        vehicle.setCurrentDriverId(dto.currentDriverId());
-        vehicle.setNotes(dto.notes());
+        vehicleMapper.updateEntity(dto, vehicle);
         return vehicle;
     }
 
@@ -122,59 +123,25 @@ public class VehicleService {
                 vehicle.getModel(),
                 vehicle.getVehicleType(),
                 vehicle.getStatus(),
+                checklistMapper.toAccessoryDtos(vehicle.getAccessories()),
                 vehicle.getDocuments().stream().map(this::toDocumentDto).toList(),
                 vehicle.getMaintenanceRecords().stream().map(this::toMaintenanceDto).toList(),
-                vehicle.getChecklistInspections().stream().map(this::toChecklistDto).toList()
+                vehicle.getChecklistInspections().stream().map(this::toChecklistDto).toList(),
+                List.of(),
+                List.of()
         );
     }
 
     private VehicleDocumentDto toDocumentDto(VehicleDocument document) {
-        return new VehicleDocumentDto(
-                document.getDocumentType(),
-                document.getDocumentNumber(),
-                document.getIssueDate(),
-                document.getExpiryDate(),
-                document.getIssuingEntity(),
-                document.getStatus(),
-                document.getNotes(),
-                document.getFile() == null ? null : document.getFile().getSizeBytes()
-        );
+        return vehicleDocumentMapper.toDto(document);
     }
 
     private MaintenanceRecordDto toMaintenanceDto(MaintenanceRecord record) {
-        return new MaintenanceRecordDto(
-                record.getMaintenanceType(),
-                record.getPerformedAt(),
-                record.getMileageAtService(),
-                record.getDescription(),
-                record.getSupplier(),
-                record.getTotalCost(),
-                record.getPartsReplaced(),
-                record.getNextMaintenanceDate(),
-                record.getNextMaintenanceMileage(),
-                record.getResponsibleUser()
-        );
+        return maintenanceMapper.toDto(record);
     }
 
     private ChecklistInspectionDto toChecklistDto(ChecklistInspection inspection) {
-        List<ChecklistInspectionDto.Item> items = inspection.getItems().stream()
-                .map(item -> new ChecklistInspectionDto.Item(
-                        item.getTemplateItem() == null ? null : item.getTemplateItem().getId(),
-                        item.getItemName(),
-                        item.isCritical(),
-                        item.getStatus(),
-                        item.getNotes()
-                ))
-                .toList();
-
-        return new ChecklistInspectionDto(
-                inspection.getActivityId(),
-                inspection.getTemplate().getId(),
-                inspection.getPerformedBy(),
-                inspection.getPerformedAt(),
-                inspection.getNotes(),
-                items
-        );
+        return checklistMapper.toInspectionDto(inspection);
     }
 
     private static String blankToNull(String value) {

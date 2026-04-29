@@ -12,8 +12,11 @@ public record VehicleConsolidatedDto(
         String model,
         String vehicleType,
         VehicleStatus status,
+        List<VehicleAccessoryDto> accessories,
         List<VehicleDocumentDto> documents,
         List<MaintenanceRecordDto> maintenanceRecords,
-        List<ChecklistInspectionDto> checklistInspections
+        List<ChecklistInspectionDto> checklistInspections,
+        List<UUID> activeActivityIds,
+        List<UUID> activeAlertIds
 ) {
 }
