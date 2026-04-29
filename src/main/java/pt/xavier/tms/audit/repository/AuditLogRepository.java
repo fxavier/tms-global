@@ -23,6 +23,7 @@ public interface AuditLogRepository extends Repository<AuditLog, UUID> {
             select a
             from AuditLog a
             where (:entityType is null or a.entityType = :entityType)
+              and (:entityId is null or a.entityId = :entityId)
               and (:operation is null or a.operation = :operation)
               and (:performedBy is null or a.performedBy = :performedBy)
               and (:from is null or a.occurredAt >= :from)
@@ -30,6 +31,7 @@ public interface AuditLogRepository extends Repository<AuditLog, UUID> {
             """)
     Page<AuditLog> findByFilters(
             @Param("entityType") String entityType,
+            @Param("entityId") UUID entityId,
             @Param("operation") AuditOperation operation,
             @Param("performedBy") String performedBy,
             @Param("from") Instant from,

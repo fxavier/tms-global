@@ -38,6 +38,7 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/aspect/AuditAspect.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/controller/AuditController.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/dto/AuditLogResponseDto.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/dto/AuditQueryDto.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/entity/AuditLog.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/event/AuditEvent.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/package-info.java

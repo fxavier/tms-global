@@ -1,6 +1,8 @@
 package pt.xavier.tms.audit.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -47,18 +49,20 @@ public class AuditService {
     @Transactional(readOnly = true)
     public Page<AuditLog> list(
             String entityType,
+            UUID entityId,
             AuditOperation operation,
             String performedBy,
-            Instant from,
-            Instant to,
+            LocalDate from,
+            LocalDate to,
             Pageable pageable
     ) {
         return auditLogRepository.findByFilters(
                 blankToNull(entityType),
+                entityId,
                 operation,
                 blankToNull(performedBy),
-                from,
-                to,
+                toStartOfDay(from),
+                toEndOfDay(to),
                 pageable
         );
     }
@@ -71,5 +75,15 @@ public class AuditService {
 
     private static String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value;
+    }
+
+    private static Instant toStartOfDay(LocalDate date) {
+        return date == null ? null : date.atStartOfDay(ZoneOffset.UTC).toInstant();
+    }
+
+    private static Instant toEndOfDay(LocalDate date) {
+        return date == null
+                ? null
+                : date.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().minusNanos(1);
     }
 }
