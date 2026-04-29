@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="pt.xavier.tms.FlywayMigrationIntegrationTests" time="6.568" tests="6" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="pt.xavier.tms.FlywayMigrationIntegrationTests" time="6.364" tests="6" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -13,7 +13,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="MZ"/>
     <property name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/openlogic-openjdk-21.jdk/Contents/Home/lib"/>
-    <property name="sun.java.command" value="/Users/xavier/dev/code/Spring-modulith/tms-global/target/surefire/surefirebooter-20260429192413527_3.jar /Users/xavier/dev/code/Spring-modulith/tms-global/target/surefire 2026-04-29T19-24-13_360-jvmRun1 surefire-20260429192413527_1tmp surefire_0-20260429192413527_2tmp"/>
+    <property name="sun.java.command" value="/Users/xavier/dev/code/Spring-modulith/tms-global/target/surefire/surefirebooter-20260429193434419_3.jar /Users/xavier/dev/code/Spring-modulith/tms-global/target/surefire 2026-04-29T19-34-34_263-jvmRun1 surefire-20260429193434419_1tmp surefire_0-20260429193434419_2tmp"/>
     <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="jdk.debug" value="release"/>
     <property name="test" value="ModulithArchitectureTests,FlywayMigrationIntegrationTests"/>
@@ -31,7 +31,7 @@
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="apple.awt.application.name" value="ForkedBooter"/>
-    <property name="surefire.real.class.path" value="/Users/xavier/dev/code/Spring-modulith/tms-global/target/surefire/surefirebooter-20260429192413527_3.jar"/>
+    <property name="surefire.real.class.path" value="/Users/xavier/dev/code/Spring-modulith/tms-global/target/surefire/surefirebooter-20260429193434419_3.jar"/>
     <property name="polyglot.engine.WarnInterpreterOnly" value="false"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
@@ -61,89 +61,89 @@
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="createsSpringModulithEventPublicationTable" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="1.94">
-    <system-out><![CDATA[19:24:14.961 [main] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.20.6
-19:24:15.377 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
-19:24:15.864 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with local Unix socket (unix:///var/run/docker.sock)
-19:24:15.867 [main] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
-19:24:15.901 [main] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  <testcase name="createsSpringModulithEventPublicationTable" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="1.584">
+    <system-out><![CDATA[19:34:35.941 [main] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.20.6
+19:34:36.381 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+19:34:36.938 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with local Unix socket (unix:///var/run/docker.sock)
+19:34:36.943 [main] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+19:34:36.981 [main] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
   Server Version: 28.5.2
   API Version: 1.51
   Operating System: Docker Desktop
   Total Memory: 7835 MB
   Labels: 
     com.docker.desktop.address=unix:///Users/xavier/Library/Containers/com.docker.docker/Data/docker-cli.sock
-19:24:15.922 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
-19:24:15.925 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
-19:24:16.011 [main] INFO tc.testcontainers/ryuk:0.11.0 -- Creating container for image: testcontainers/ryuk:0.11.0
-19:24:16.386 [main] INFO org.testcontainers.utility.RegistryAuthLocator -- Credential helper/store (docker-credential-desktop) does not have credentials for https://index.docker.io/v1/
-19:24:16.524 [main] INFO tc.testcontainers/ryuk:0.11.0 -- Container testcontainers/ryuk:0.11.0 is starting: 35fde561982cb887064e26899f30cc93ecb8b3da934a5d2bec4991d0c2e2007d
-19:24:17.028 [main] INFO tc.testcontainers/ryuk:0.11.0 -- Container testcontainers/ryuk:0.11.0 started in PT1.016896S
-19:24:17.040 [main] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
-19:24:17.041 [main] INFO org.testcontainers.DockerClientFactory -- Checking the system...
-19:24:17.042 [main] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
-19:24:17.069 [main] INFO tc.postgres:16-alpine -- Creating container for image: postgres:16-alpine
-19:24:17.157 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine is starting: 64ef2bd0ce74a7ace56685400894eb3fca5e6e8b8a41c4f582d2499ddd2d7eec
-19:24:19.768 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine started in PT2.699103S
-19:24:19.769 [main] INFO tc.postgres:16-alpine -- Container is started (JDBC URL: jdbc:postgresql://localhost:52048/tms_test?loggerLevel=OFF)
-19:24:20.454 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:52048/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
-19:24:20.562 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Schema history table "public"."flyway_schema_history" does not exist yet
-19:24:20.572 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.071s)
-19:24:20.640 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "public"."flyway_schema_history" ...
-19:24:20.908 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": << Empty Schema >>
-19:24:20.920 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "0 - init extensions"
-19:24:20.985 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "1 - create event publication table"
-19:24:21.006 [main] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: identifier "event_publication_serialized_event_listener_id_completion_date_idx" will be truncated to "event_publication_serialized_event_listener_id_completion_date_" (SQL State: 42622 - Error Code: 0)
-19:24:21.030 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "2 - rename event publication lookup index"
-19:24:21.054 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "3 - create files"
-19:24:21.083 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "4 - create vehicles"
-19:24:21.109 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "5 - create vehicle documents"
-19:24:21.140 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "6 - create vehicle accessories"
-19:24:21.166 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "7 - create maintenance records"
-19:24:21.195 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "8 - create checklists"
-19:24:21.242 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "10 - create vehicle indexes"
-19:24:21.277 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "11 - create audit logs"
-19:24:21.303 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "12 - create drivers"
-19:24:21.328 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "13 - create driver documents"
-19:24:21.353 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "14 - create driver indexes"
-19:24:21.383 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "15 - create activities"
-19:24:21.450 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "16 - create activity events"
-19:24:21.504 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 16 migrations to schema "public", now at version v16 (execution time 00:00.310s)
+19:34:37.004 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+19:34:37.009 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+19:34:37.109 [main] INFO tc.testcontainers/ryuk:0.11.0 -- Creating container for image: testcontainers/ryuk:0.11.0
+19:34:38.105 [main] INFO org.testcontainers.utility.RegistryAuthLocator -- Credential helper/store (docker-credential-desktop) does not have credentials for https://index.docker.io/v1/
+19:34:38.271 [main] INFO tc.testcontainers/ryuk:0.11.0 -- Container testcontainers/ryuk:0.11.0 is starting: b46235749f79a6b473c2925ad7d4a431d7fa0a39a54b7cd3829463658a75f7c0
+19:34:38.955 [main] INFO tc.testcontainers/ryuk:0.11.0 -- Container testcontainers/ryuk:0.11.0 started in PT1.846138S
+19:34:38.966 [main] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+19:34:38.966 [main] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+19:34:38.967 [main] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+19:34:38.993 [main] INFO tc.postgres:16-alpine -- Creating container for image: postgres:16-alpine
+19:34:39.071 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine is starting: 4588021cc2b26b0ccb5f30c1f6ccde752862a392a790bf628af40d5c0434abcd
+19:34:42.066 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine started in PT3.072354S
+19:34:42.066 [main] INFO tc.postgres:16-alpine -- Container is started (JDBC URL: jdbc:postgresql://localhost:54039/tms_test?loggerLevel=OFF)
+19:34:42.671 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:54039/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
+19:34:42.746 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Schema history table "public"."flyway_schema_history" does not exist yet
+19:34:42.752 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.036s)
+19:34:42.776 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "public"."flyway_schema_history" ...
+19:34:42.935 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": << Empty Schema >>
+19:34:42.947 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "0 - init extensions"
+19:34:43.007 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "1 - create event publication table"
+19:34:43.026 [main] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: identifier "event_publication_serialized_event_listener_id_completion_date_idx" will be truncated to "event_publication_serialized_event_listener_id_completion_date_" (SQL State: 42622 - Error Code: 0)
+19:34:43.043 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "2 - rename event publication lookup index"
+19:34:43.063 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "3 - create files"
+19:34:43.090 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "4 - create vehicles"
+19:34:43.116 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "5 - create vehicle documents"
+19:34:43.143 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "6 - create vehicle accessories"
+19:34:43.169 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "7 - create maintenance records"
+19:34:43.200 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "8 - create checklists"
+19:34:43.251 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "10 - create vehicle indexes"
+19:34:43.289 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "11 - create audit logs"
+19:34:43.325 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "12 - create drivers"
+19:34:43.354 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "13 - create driver documents"
+19:34:43.382 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "14 - create driver indexes"
+19:34:43.417 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "15 - create activities"
+19:34:43.460 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "16 - create activity events"
+19:34:43.487 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 16 migrations to schema "public", now at version v16 (execution time 00:00.284s)
 ]]></system-out>
   </testcase>
-  <testcase name="createsDriverModuleTablesAndIndexes" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.342">
-    <system-out><![CDATA[19:24:21.765 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:52048/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
-19:24:21.806 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.021s)
-19:24:21.844 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
-19:24:21.845 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+  <testcase name="createsDriverModuleTablesAndIndexes" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.306">
+    <system-out><![CDATA[19:34:43.702 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:54039/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
+19:34:43.737 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.019s)
+19:34:43.771 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
+19:34:43.773 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
 ]]></system-out>
   </testcase>
-  <testcase name="createsAuditLogTableAndIndexes" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.242">
-    <system-out><![CDATA[19:24:22.109 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:52048/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
-19:24:22.151 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.021s)
-19:24:22.185 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
-19:24:22.186 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+  <testcase name="createsAuditLogTableAndIndexes" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.227">
+    <system-out><![CDATA[19:34:44.008 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:54039/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
+19:34:44.042 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.018s)
+19:34:44.075 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
+19:34:44.076 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
 ]]></system-out>
   </testcase>
-  <testcase name="createsActivityModuleTablesAndIndexes" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.331">
-    <system-out><![CDATA[19:24:22.347 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:52048/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
-19:24:22.384 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.020s)
-19:24:22.420 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
-19:24:22.420 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+  <testcase name="createsActivityModuleTablesAndIndexes" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.291">
+    <system-out><![CDATA[19:34:44.233 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:54039/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
+19:34:44.266 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.017s)
+19:34:44.299 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
+19:34:44.300 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
 ]]></system-out>
   </testcase>
-  <testcase name="createsVehicleModuleTablesAndIndexes" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.436">
-    <system-out><![CDATA[19:24:22.679 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:52048/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
-19:24:22.711 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.015s)
-19:24:22.747 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
-19:24:22.749 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+  <testcase name="createsVehicleModuleTablesAndIndexes" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.366">
+    <system-out><![CDATA[19:34:44.521 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:54039/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
+19:34:44.553 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.017s)
+19:34:44.584 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
+19:34:44.585 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
 ]]></system-out>
   </testcase>
-  <testcase name="appliesBasePostgresExtensionsMigration" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.141">
-    <system-out><![CDATA[19:24:23.114 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:52048/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
-19:24:23.148 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.019s)
-19:24:23.191 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
-19:24:23.192 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+  <testcase name="appliesBasePostgresExtensionsMigration" classname="pt.xavier.tms.FlywayMigrationIntegrationTests" time="0.134">
+    <system-out><![CDATA[19:34:44.886 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:54039/tms_test?loggerLevel=OFF (PostgreSQL 16.11)
+19:34:44.930 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 16 migrations (execution time 00:00.029s)
+19:34:44.962 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 16
+19:34:44.963 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
 ]]></system-out>
   </testcase>
 </testsuite>
