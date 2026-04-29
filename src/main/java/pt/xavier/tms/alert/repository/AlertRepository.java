@@ -7,12 +7,13 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import pt.xavier.tms.alert.entity.Alert;
 import pt.xavier.tms.shared.enums.AlertSeverity;
 import pt.xavier.tms.shared.enums.AlertType;
 
-public interface AlertRepository extends JpaRepository<Alert, UUID> {
+public interface AlertRepository extends JpaRepository<Alert, UUID>, JpaSpecificationExecutor<Alert> {
 
     Page<Alert> findByResolvedFalse(Pageable pageable);
 

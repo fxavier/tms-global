@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "tms.driver.services.enabled=false",
         "tms.activity.controllers.enabled=false",
         "tms.activity.services.enabled=false",
+        "tms.alert.controllers.enabled=false",
         "tms.alert.services.enabled=false"
 })
 @AutoConfigureMockMvc

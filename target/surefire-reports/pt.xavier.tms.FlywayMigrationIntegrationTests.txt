@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: pt.xavier.tms.FlywayMigrationIntegrationTests
 -------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.086 s -- in pt.xavier.tms.FlywayMigrationIntegrationTests
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.239 s -- in pt.xavier.tms.FlywayMigrationIntegrationTests

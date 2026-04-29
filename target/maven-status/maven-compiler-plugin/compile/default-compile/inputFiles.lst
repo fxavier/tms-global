@@ -19,6 +19,11 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/activity/service/ActivitySecurityService.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/activity/service/ActivityService.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/activity/service/AllocationValidationService.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/controller/AlertConfigurationController.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/controller/AlertController.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/dto/AlertConfigurationResponseDto.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/dto/AlertConfigurationUpdateDto.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/dto/AlertResponseDto.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/entity/Alert.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/entity/AlertConfiguration.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/entity/AuditableEntity.java
@@ -26,6 +31,7 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/repository/AlertConfigurationRepository.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/repository/AlertRepository.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/scheduler/AlertScheduler.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/service/AlertResolutionService.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/alert/service/AlertService.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/annotation/Auditable.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/annotation/package-info.java
