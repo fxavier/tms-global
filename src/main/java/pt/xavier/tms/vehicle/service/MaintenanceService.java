@@ -2,7 +2,7 @@ package pt.xavier.tms.vehicle.service;
 
 import java.util.UUID;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +19,7 @@ import pt.xavier.tms.vehicle.event.MaintenanceDueAlertRequested;
 import pt.xavier.tms.vehicle.repository.MaintenanceRepository;
 
 @Service
-@ConditionalOnBean(MaintenanceRepository.class)
+@ConditionalOnProperty(name = "tms.vehicle.services.enabled", havingValue = "true", matchIfMissing = true)
 @Transactional(readOnly = true)
 public class MaintenanceService {
 

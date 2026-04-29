@@ -1,9 +1,10 @@
 package pt.xavier.tms.vehicle.service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ import pt.xavier.tms.vehicle.repository.ChecklistInspectionRepository;
 import pt.xavier.tms.vehicle.repository.ChecklistTemplateRepository;
 
 @Service
-@ConditionalOnBean({ChecklistTemplateRepository.class, ChecklistInspectionRepository.class})
+@ConditionalOnProperty(name = "tms.vehicle.services.enabled", havingValue = "true", matchIfMissing = true)
 @Transactional(readOnly = true)
 public class ChecklistService {
 
@@ -75,6 +76,13 @@ public class ChecklistService {
     public ChecklistTemplate getTemplate(UUID templateId) {
         return checklistTemplateRepository.findById(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("CHECKLIST_TEMPLATE_NOT_FOUND", "Checklist template not found"));
+    }
+
+    public List<ChecklistTemplate> listTemplates(String vehicleType) {
+        if (vehicleType == null || vehicleType.isBlank()) {
+            return checklistTemplateRepository.findAll();
+        }
+        return checklistTemplateRepository.findByVehicleTypeAndIsActiveTrue(vehicleType);
     }
 
     @Auditable(entityType = CHECKLIST_TEMPLATE_ENTITY_TYPE, operation = AuditOperation.CRIACAO)

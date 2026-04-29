@@ -9,7 +9,9 @@ import org.springframework.boot.test.context.SpringBootTest;
                 + "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
                 + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,"
                 + "org.springframework.modulith.events.jpa.JpaEventPublicationAutoConfiguration",
-        "tms.jpa.auditing.enabled=false"
+        "tms.jpa.auditing.enabled=false",
+        "tms.vehicle.controllers.enabled=false",
+        "tms.vehicle.services.enabled=false"
 })
 class TmsApplicationTests {
 

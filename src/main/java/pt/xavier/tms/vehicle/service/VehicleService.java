@@ -3,7 +3,7 @@ package pt.xavier.tms.vehicle.service;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ import pt.xavier.tms.vehicle.entity.VehicleDocument;
 import pt.xavier.tms.vehicle.repository.VehicleRepository;
 
 @Service
-@ConditionalOnBean(VehicleRepository.class)
+@ConditionalOnProperty(name = "tms.vehicle.services.enabled", havingValue = "true", matchIfMissing = true)
 @Transactional(readOnly = true)
 public class VehicleService {
 
