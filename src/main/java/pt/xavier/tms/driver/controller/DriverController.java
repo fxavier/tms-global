@@ -1,7 +1,6 @@
 package pt.xavier.tms.driver.controller;
 
 import java.net.URI;
-import java.time.LocalDate;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -25,7 +24,6 @@ import pt.xavier.tms.driver.dto.DriverResponseDto;
 import pt.xavier.tms.driver.dto.DriverStatusUpdateDto;
 import pt.xavier.tms.driver.dto.DriverUpdateDto;
 import pt.xavier.tms.driver.service.DriverService;
-import pt.xavier.tms.integration.dto.DriverAvailabilityDto;
 import pt.xavier.tms.shared.dto.ApiResponse;
 import pt.xavier.tms.shared.dto.PagedResponse;
 import pt.xavier.tms.shared.enums.DriverStatus;
@@ -87,13 +85,4 @@ public class DriverController {
         return ApiResponse.success(null);
     }
 
-    @GetMapping("/{id}/availability")
-    @PreAuthorize("hasAnyRole('ADMIN','GESTOR_FROTA','OPERADOR','AUDITOR')")
-    public ApiResponse<DriverAvailabilityDto> getAvailability(
-            @PathVariable UUID id,
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate
-    ) {
-        return ApiResponse.success(driverService.getAvailability(id, startDate, endDate));
-    }
 }

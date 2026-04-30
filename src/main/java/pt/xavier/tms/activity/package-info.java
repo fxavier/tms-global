@@ -5,8 +5,7 @@
                 "vehicle::repository",
                 "driver::entity",
                 "driver::repository",
-                "integration::port",
-                "integration::dto",
+                "hr::entity",
                 "audit::annotation"
         }
 )

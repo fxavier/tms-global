@@ -1,6 +1,7 @@
 package pt.xavier.tms.driver.dto;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -17,6 +18,7 @@ public record DriverCreateDto(
         LocalDate licenseIssueDate,
         LocalDate licenseExpiryDate,
         @Size(max = 200) String activityLocation,
+        UUID employeeId,
         DriverStatus status,
         String notes
 ) {

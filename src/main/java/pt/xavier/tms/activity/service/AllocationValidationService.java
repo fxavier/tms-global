@@ -1,6 +1,5 @@
 package pt.xavier.tms.activity.service;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 import pt.xavier.tms.activity.dto.AllocationBlockerDto;
 import pt.xavier.tms.activity.dto.AllocationResultDto;
 import pt.xavier.tms.activity.repository.ActivityRepository;
+import pt.xavier.tms.driver.entity.Driver;
 import pt.xavier.tms.driver.repository.DriverDocumentRepository;
 import pt.xavier.tms.driver.repository.DriverRepository;
-import pt.xavier.tms.integration.exception.RhIntegrationException;
-import pt.xavier.tms.integration.port.RhIntegrationPort;
+import pt.xavier.tms.hr.entity.Employee;
 import pt.xavier.tms.shared.enums.DocumentStatus;
 import pt.xavier.tms.shared.enums.DriverDocumentType;
 import pt.xavier.tms.shared.enums.DriverStatus;
+import pt.xavier.tms.shared.enums.EmployeeStatus;
 import pt.xavier.tms.shared.enums.VehicleStatus;
 import pt.xavier.tms.vehicle.repository.ChecklistInspectionRepository;
 import pt.xavier.tms.vehicle.repository.VehicleDocumentRepository;
@@ -35,7 +35,6 @@ public class AllocationValidationService {
     private final ChecklistInspectionRepository checklistInspectionRepository;
     private final DriverRepository driverRepository;
     private final DriverDocumentRepository driverDocumentRepository;
-    private final RhIntegrationPort rhIntegrationPort;
     private final ActivityRepository activityRepository;
 
     public AllocationValidationService(
@@ -44,7 +43,6 @@ public class AllocationValidationService {
             ChecklistInspectionRepository checklistInspectionRepository,
             DriverRepository driverRepository,
             DriverDocumentRepository driverDocumentRepository,
-            RhIntegrationPort rhIntegrationPort,
             ActivityRepository activityRepository
     ) {
         this.vehicleRepository = vehicleRepository;
@@ -52,7 +50,6 @@ public class AllocationValidationService {
         this.checklistInspectionRepository = checklistInspectionRepository;
         this.driverRepository = driverRepository;
         this.driverDocumentRepository = driverDocumentRepository;
-        this.rhIntegrationPort = rhIntegrationPort;
         this.activityRepository = activityRepository;
     }
 
@@ -98,6 +95,7 @@ public class AllocationValidationService {
             if (driver.getStatus() == DriverStatus.SUSPENSO) {
                 blockers.add(blocker("DRIVER_SUSPENDED", "Driver is suspended"));
             }
+            validateInternalEmployeeEligibility(driver, blockers);
         });
 
         driverDocumentRepository.findByDriverIdAndDocumentType(driverId, DriverDocumentType.CARTA_CONDUCAO).stream()
@@ -106,21 +104,6 @@ public class AllocationValidationService {
                         "DRIVER_LICENSE_EXPIRED",
                         "Driver license is expired"
                 )));
-
-        LocalDate startDate = plannedStart.toLocalDate();
-        LocalDate endDate = plannedEnd.toLocalDate();
-        boolean hasOverride = rhOverrideJustification != null && !rhOverrideJustification.isBlank();
-
-        try {
-            var availability = rhIntegrationPort.checkAvailability(driverId, startDate, endDate);
-            if (!availability.available() && !hasOverride) {
-                blockers.add(blocker("DRIVER_RH_UNAVAILABLE", "Driver unavailable in RH system"));
-            }
-        } catch (RhIntegrationException ex) {
-            if (!hasOverride) {
-                blockers.add(blocker("RH_SYSTEM_UNAVAILABLE", "RH system is unavailable"));
-            }
-        }
 
         activityRepository.findConflictingActivitiesForVehicle(vehicleId, plannedStart, plannedEnd, activityId)
                 .forEach(activity -> blockers.add(blocker(
@@ -139,5 +122,30 @@ public class AllocationValidationService {
 
     private static AllocationBlockerDto blocker(String code, String message) {
         return new AllocationBlockerDto(code, message);
+    }
+
+    private static void validateInternalEmployeeEligibility(Driver driver, List<AllocationBlockerDto> blockers) {
+        if (driver.getEmployee() == null) {
+            blockers.add(blocker("DRIVER_EMPLOYEE_NOT_LINKED", "Driver is not linked to an internal employee"));
+            return;
+        }
+
+        Employee employee = driver.getEmployee();
+        if (employee.getId() == null) {
+            blockers.add(blocker("EMPLOYEE_NOT_FOUND", "Associated employee not found"));
+            return;
+        }
+        if (employee.getStatus() != EmployeeStatus.ACTIVE) {
+            blockers.add(blocker("EMPLOYEE_INACTIVE", "Associated employee is not ACTIVE"));
+        }
+        if (employee.getFunction() != null && employee.getFunction().getCode() != null) {
+            String code = employee.getFunction().getCode().trim().toUpperCase();
+            if (!"DRIVER".equals(code) && !"MOTORISTA".equals(code)) {
+                blockers.add(blocker(
+                        "EMPLOYEE_FUNCTION_NOT_ALLOWED_FOR_DRIVER",
+                        "Associated employee function is not allowed for driver"
+                ));
+            }
+        }
     }
 }

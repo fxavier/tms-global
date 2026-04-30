@@ -132,6 +132,7 @@ class FlywayMigrationIntegrationTests {
                 .containsEntry("id_number", "character varying(50)")
                 .containsEntry("license_number", "character varying(50)")
                 .containsEntry("status", "character varying(30)")
+                .containsEntry("employee_id", "uuid")
                 .containsEntry("deleted_at", "timestamp with time zone(6)");
 
         assertThat(tableColumns("driver_documents"))
@@ -142,10 +143,40 @@ class FlywayMigrationIntegrationTests {
                 .containsEntry("deleted_by", "character varying(100)");
 
         assertThat(indexNames("drivers"))
-                .contains("idx_drivers_status", "idx_drivers_license_expiry", "idx_drivers_location");
+                .contains("idx_drivers_status", "idx_drivers_license_expiry", "idx_drivers_location", "idx_drivers_employee");
 
         assertThat(indexNames("driver_documents"))
                 .contains("idx_driver_docs_driver", "idx_driver_docs_expiry");
+    }
+
+    @Test
+    void createsHrModuleTablesAndIndexes() throws SQLException {
+        migrate();
+
+        assertThat(tableNames()).contains("employee_functions", "employees", "salary_payments");
+
+        assertThat(tableColumns("employee_functions"))
+                .containsEntry("id", "uuid")
+                .containsEntry("code", "character varying(50)")
+                .containsEntry("name", "character varying(150)")
+                .containsEntry("is_active", "boolean");
+
+        assertThat(tableColumns("employees"))
+                .containsEntry("employee_number", "character varying(50)")
+                .containsEntry("function_id", "uuid")
+                .containsEntry("status", "character varying(30)")
+                .containsEntry("deleted_at", "timestamp with time zone(6)");
+
+        assertThat(tableColumns("salary_payments"))
+                .containsEntry("employee_id", "uuid")
+                .containsEntry("period_year", "integer")
+                .containsEntry("period_month", "integer")
+                .containsEntry("status", "character varying(30)");
+
+        assertThat(indexNames("employee_functions")).contains("idx_employee_functions_code");
+        assertThat(indexNames("employees")).contains("idx_employees_number", "idx_employees_status", "idx_employees_function");
+        assertThat(indexNames("salary_payments"))
+                .contains("idx_salary_payments_employee", "idx_salary_payments_period", "idx_salary_payments_status");
     }
 
     @Test

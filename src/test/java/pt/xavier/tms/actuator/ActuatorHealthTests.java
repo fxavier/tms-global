@@ -25,7 +25,9 @@ import org.springframework.test.web.servlet.MockMvc;
         "tms.activity.controllers.enabled=false",
         "tms.activity.services.enabled=false",
         "tms.alert.controllers.enabled=false",
-        "tms.alert.services.enabled=false"
+        "tms.alert.services.enabled=false",
+        "tms.hr.controllers.enabled=false",
+        "tms.hr.services.enabled=false"
 })
 @AutoConfigureMockMvc
 class ActuatorHealthTests {

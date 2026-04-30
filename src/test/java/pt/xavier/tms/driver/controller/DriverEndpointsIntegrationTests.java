@@ -1,6 +1,5 @@
 package pt.xavier.tms.driver.controller;
 
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -10,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,9 +30,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import pt.xavier.tms.integration.dto.DriverAvailabilityDto;
-import pt.xavier.tms.integration.exception.RhIntegrationException;
-import pt.xavier.tms.integration.port.RhIntegrationPort;
 import pt.xavier.tms.driver.entity.Driver;
 import pt.xavier.tms.driver.repository.DriverRepository;
 import pt.xavier.tms.shared.enums.DriverStatus;
@@ -60,9 +55,6 @@ class DriverEndpointsIntegrationTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
-    private RhIntegrationPort rhIntegrationPort;
-
     @Autowired
     private DriverRepository driverRepository;
 
@@ -87,6 +79,7 @@ class DriverEndpointsIntegrationTests {
                 LocalDate.of(2023, 1, 1),
                 LocalDate.of(2028, 1, 1),
                 "Lisboa",
+                null,
                 DriverStatus.ATIVO,
                 "Initial"
         ));
@@ -116,6 +109,7 @@ class DriverEndpointsIntegrationTests {
                 LocalDate.of(2023, 1, 1),
                 LocalDate.of(2028, 1, 1),
                 "Porto",
+                null,
                 "Updated"
         ));
 
@@ -137,78 +131,6 @@ class DriverEndpointsIntegrationTests {
                 .andExpect(status().isOk());
 
         assertNotNull(driverRepository.findById(driverId).orElseThrow().getDeletedAt());
-    }
-
-    @Test
-    @WithMockUser(roles = "OPERADOR")
-    void availabilityEndpointReturnsRhPayload() throws Exception {
-        UUID driverId = createDriverForRead();
-        LocalDate startDate = LocalDate.of(2026, 5, 1);
-        LocalDate endDate = LocalDate.of(2026, 5, 2);
-
-        when(rhIntegrationPort.checkAvailability(driverId, startDate, endDate))
-                .thenReturn(new DriverAvailabilityDto(driverId, false, "DRIVER_ON_LEAVE", List.of()));
-
-        mockMvc.perform(get("/api/v1/drivers/{id}/availability", driverId)
-                        .param("startDate", startDate.toString())
-                        .param("endDate", endDate.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.driverId").value(driverId.toString()))
-                .andExpect(jsonPath("$.data.available").value(false))
-                .andExpect(jsonPath("$.data.reason").value("DRIVER_ON_LEAVE"));
-    }
-
-    @Test
-    @WithMockUser(roles = "OPERADOR")
-    void availabilityEndpointReturnsFallbackWhenRhFails() throws Exception {
-        UUID driverId = createDriverForRead();
-        LocalDate startDate = LocalDate.of(2026, 6, 1);
-        LocalDate endDate = LocalDate.of(2026, 6, 2);
-
-        when(rhIntegrationPort.checkAvailability(driverId, startDate, endDate))
-                .thenThrow(new RhIntegrationException("timeout", new RuntimeException("boom")));
-
-        mockMvc.perform(get("/api/v1/drivers/{id}/availability", driverId)
-                        .param("startDate", startDate.toString())
-                        .param("endDate", endDate.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.available").value(false))
-                .andExpect(jsonPath("$.data.reason").value("RH_SYSTEM_UNAVAILABLE"));
-    }
-
-    @Test
-    @WithMockUser(roles = "OPERADOR")
-    void rhAvailabilityWebhookRequiresRhIntegradorRole() throws Exception {
-        String payload = objectMapper.writeValueAsString(new DriverAvailabilityDto(
-                UUID.randomUUID(),
-                true,
-                null,
-                List.of()
-        ));
-
-        mockMvc.perform(post("/api/v1/integration/rh/availability")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithMockUser(roles = "RH_INTEGRADOR")
-    void rhAvailabilityWebhookAcceptsRhIntegradorRole() throws Exception {
-        UUID driverId = UUID.randomUUID();
-        String payload = objectMapper.writeValueAsString(new DriverAvailabilityDto(
-                driverId,
-                true,
-                null,
-                List.of()
-        ));
-
-        mockMvc.perform(post("/api/v1/integration/rh/availability")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.driverId").value(driverId.toString()))
-                .andExpect(jsonPath("$.data.available").value(true));
     }
 
     private UUID createDriverForRead() throws Exception {
@@ -236,6 +158,7 @@ class DriverEndpointsIntegrationTests {
             LocalDate licenseIssueDate,
             LocalDate licenseExpiryDate,
             String activityLocation,
+            UUID employeeId,
             DriverStatus status,
             String notes
     ) {
@@ -251,6 +174,7 @@ class DriverEndpointsIntegrationTests {
             LocalDate licenseIssueDate,
             LocalDate licenseExpiryDate,
             String activityLocation,
+            UUID employeeId,
             String notes
     ) {
     }

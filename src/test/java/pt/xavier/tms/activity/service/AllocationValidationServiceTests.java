@@ -22,13 +22,13 @@ import pt.xavier.tms.driver.entity.Driver;
 import pt.xavier.tms.driver.entity.DriverDocument;
 import pt.xavier.tms.driver.repository.DriverDocumentRepository;
 import pt.xavier.tms.driver.repository.DriverRepository;
-import pt.xavier.tms.integration.dto.DriverAvailabilityDto;
-import pt.xavier.tms.integration.exception.RhIntegrationException;
-import pt.xavier.tms.integration.port.RhIntegrationPort;
+import pt.xavier.tms.hr.entity.Employee;
+import pt.xavier.tms.hr.entity.EmployeeFunction;
 import pt.xavier.tms.shared.enums.ChecklistItemStatus;
 import pt.xavier.tms.shared.enums.DocumentStatus;
 import pt.xavier.tms.shared.enums.DriverDocumentType;
 import pt.xavier.tms.shared.enums.DriverStatus;
+import pt.xavier.tms.shared.enums.EmployeeStatus;
 import pt.xavier.tms.shared.enums.VehicleStatus;
 import pt.xavier.tms.vehicle.entity.ChecklistInspection;
 import pt.xavier.tms.vehicle.entity.ChecklistInspectionItem;
@@ -52,8 +52,6 @@ class AllocationValidationServiceTests {
     @Mock
     private DriverDocumentRepository driverDocumentRepository;
     @Mock
-    private RhIntegrationPort rhIntegrationPort;
-    @Mock
     private ActivityRepository activityRepository;
 
     @InjectMocks
@@ -76,10 +74,8 @@ class AllocationValidationServiceTests {
         when(vehicleRepository.findById(vehicleId)).thenReturn(Optional.of(vehicle(VehicleStatus.DISPONIVEL)));
         when(vehicleDocumentRepository.findByVehicleIdAndStatus(vehicleId, DocumentStatus.EXPIRADO)).thenReturn(List.of());
         when(checklistInspectionRepository.findLatestByVehicleId(vehicleId)).thenReturn(Optional.empty());
-        when(driverRepository.findById(driverId)).thenReturn(Optional.of(driver(DriverStatus.ATIVO)));
+        when(driverRepository.findById(driverId)).thenReturn(Optional.of(driver(DriverStatus.ATIVO, EmployeeStatus.ACTIVE, "DRIVER")));
         when(driverDocumentRepository.findByDriverIdAndDocumentType(driverId, DriverDocumentType.CARTA_CONDUCAO)).thenReturn(List.of());
-        when(rhIntegrationPort.checkAvailability(driverId, start.toLocalDate(), end.toLocalDate()))
-                .thenReturn(new DriverAvailabilityDto(driverId, true, null, List.of()));
         when(activityRepository.findConflictingActivitiesForVehicle(vehicleId, start, end, activityId)).thenReturn(List.of());
         when(activityRepository.findConflictingActivitiesForDriver(driverId, start, end, activityId)).thenReturn(List.of());
     }
@@ -133,7 +129,7 @@ class AllocationValidationServiceTests {
 
     @Test
     void suspendedDriverGeneratesBlocker() {
-        when(driverRepository.findById(driverId)).thenReturn(Optional.of(driver(DriverStatus.SUSPENSO)));
+        when(driverRepository.findById(driverId)).thenReturn(Optional.of(driver(DriverStatus.SUSPENSO, EmployeeStatus.ACTIVE, "DRIVER")));
 
         var result = service.validate(activityId, vehicleId, driverId, start, end, null);
 
@@ -155,35 +151,32 @@ class AllocationValidationServiceTests {
     }
 
     @Test
-    void rhUnavailableWithoutOverrideGeneratesBlocker() {
-        when(rhIntegrationPort.checkAvailability(driverId, start.toLocalDate(), end.toLocalDate()))
-                .thenReturn(new DriverAvailabilityDto(driverId, false, "ON_LEAVE", List.of()));
+    void driverWithoutEmployeeLinkGeneratesBlocker() {
+        when(driverRepository.findById(driverId)).thenReturn(Optional.of(driver(DriverStatus.ATIVO, null, null)));
 
         var result = service.validate(activityId, vehicleId, driverId, start, end, null);
 
         assertThat(result.allocated()).isFalse();
-        assertThat(result.blockers()).extracting("code").contains("DRIVER_RH_UNAVAILABLE");
+        assertThat(result.blockers()).extracting("code").contains("DRIVER_EMPLOYEE_NOT_LINKED");
     }
 
     @Test
-    void rhExceptionWithoutOverrideGeneratesBlocker() {
-        when(rhIntegrationPort.checkAvailability(driverId, start.toLocalDate(), end.toLocalDate()))
-                .thenThrow(new RhIntegrationException("down", new RuntimeException("boom")));
+    void inactiveEmployeeGeneratesBlocker() {
+        when(driverRepository.findById(driverId)).thenReturn(Optional.of(driver(DriverStatus.ATIVO, EmployeeStatus.INACTIVE, "DRIVER")));
 
         var result = service.validate(activityId, vehicleId, driverId, start, end, null);
 
         assertThat(result.allocated()).isFalse();
-        assertThat(result.blockers()).extracting("code").contains("RH_SYSTEM_UNAVAILABLE");
+        assertThat(result.blockers()).extracting("code").contains("EMPLOYEE_INACTIVE");
     }
 
     @Test
-    void rhExceptionWithOverrideDoesNotBlock() {
-        when(rhIntegrationPort.checkAvailability(driverId, start.toLocalDate(), end.toLocalDate()))
-                .thenThrow(new RhIntegrationException("down", new RuntimeException("boom")));
+    void employeeFunctionNotAllowedGeneratesBlocker() {
+        when(driverRepository.findById(driverId)).thenReturn(Optional.of(driver(DriverStatus.ATIVO, EmployeeStatus.ACTIVE, "DISPATCHER")));
 
-        var result = service.validate(activityId, vehicleId, driverId, start, end, "Justified");
+        var result = service.validate(activityId, vehicleId, driverId, start, end, null);
 
-        assertThat(result.blockers()).extracting("code").doesNotContain("RH_SYSTEM_UNAVAILABLE");
+        assertThat(result.blockers()).extracting("code").contains("EMPLOYEE_FUNCTION_NOT_ALLOWED_FOR_DRIVER");
     }
 
     @Test
@@ -225,10 +218,21 @@ class AllocationValidationServiceTests {
         return vehicle;
     }
 
-    private static Driver driver(DriverStatus status) {
+    private static Driver driver(DriverStatus status, EmployeeStatus employeeStatus, String functionCode) {
         Driver driver = new Driver();
         driver.setId(UUID.randomUUID());
         driver.setStatus(status);
+        if (employeeStatus != null) {
+            Employee employee = new Employee();
+            employee.setId(UUID.randomUUID());
+            employee.setStatus(employeeStatus);
+            if (functionCode != null) {
+                EmployeeFunction function = new EmployeeFunction();
+                function.setCode(functionCode);
+                employee.setFunction(function);
+            }
+            driver.setEmployee(employee);
+        }
         return driver;
     }
 }

@@ -16,7 +16,7 @@ Este plano de implementação converte o design técnico do TMS numa sequência 
   - Inicializar projeto Maven com Java 21 e Spring Boot 3.x
   - Adicionar dependências ao `pom.xml`: `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-security`, `spring-boot-starter-oauth2-resource-server`, `spring-boot-starter-validation`, `spring-boot-starter-aop`, `spring-boot-starter-actuator`, `spring-modulith-starter-core`, `spring-modulith-starter-jpa`, `postgresql`, `flyway-core`, `flyway-database-postgresql`, `lombok`, `mapstruct`, `caffeine`, `bucket4j-core`, `aws-sdk-s3`, `micrometer-registry-prometheus`
   - Criar classe principal `TmsApplication.java` em `pt.company.tms`
-  - Criar estrutura de pacotes para os módulos: `vehicle`, `driver`, `activity`, `alert`, `audit`, `integration`, `shared`, `security`
+  - Criar estrutura de pacotes para os módulos: `vehicle`, `driver`, `activity`, `alert`, `audit`, `integration`, `hr`, `shared`, `security`
   - _Requisitos: 14.1, 15.1, 16.1_
 
 - [x] 2. Configurar PostgreSQL, Flyway e JPA
@@ -161,6 +161,238 @@ Este plano de implementação converte o design técnico do TMS numa sequência 
   - Garantir que todos os testes passam, perguntar ao utilizador se surgirem dúvidas.
 
 ---
+
+- [ ] X. Substituir integração externa de RH por módulo interno `hr`
+  - Remover a dependência de sistema externo de RH do TMS:
+    - Remover `RhIntegrationPort`
+    - Remover `RhRestAdapter`
+    - Remover `RhModuleAdapter`
+    - Remover `RhIntegrationConfig`
+    - Remover `RhIntegrationException`
+    - Remover configurações `tms.integration.rh.*` do `application.yml`
+    - Remover cache Caffeine específico da disponibilidade RH
+    - Remover endpoint `POST /api/v1/integration/rh/availability`
+    - Remover role técnica `RH_INTEGRADOR`, caso já não seja usada noutro contexto
+  - Atualizar a estrutura de módulos do projeto para incluir o novo módulo:
+    - Adicionar pacote `pt.company.tms.hr`
+    - Atualizar a task inicial de criação do projeto para incluir os módulos:
+      `vehicle`, `driver`, `activity`, `alert`, `audit`, `integration`, `hr`, `shared`, `security`
+  - Criar migrations Flyway para o módulo `hr`:
+    - Criar `V11__create_hr_module.sql`
+    - Criar tabela `employee_functions`:
+      - `id` UUID PK
+      - `code` VARCHAR(50) UNIQUE NOT NULL
+      - `name` VARCHAR(150) NOT NULL
+      - `description` TEXT
+      - `is_active` BOOLEAN DEFAULT TRUE
+      - campos de auditoria: `created_at`, `created_by`, `updated_at`, `updated_by`
+    - Criar tabela `employees`:
+      - `id` UUID PK
+      - `employee_number` VARCHAR(50) UNIQUE NOT NULL
+      - `full_name` VARCHAR(200) NOT NULL
+      - `phone` VARCHAR(50)
+      - `email` VARCHAR(150)
+      - `id_number` VARCHAR(100) UNIQUE
+      - `function_id` UUID FK para `employee_functions(id)`
+      - `status` VARCHAR(30) NOT NULL com CHECK: `ACTIVE`, `INACTIVE`, `SUSPENDED`, `TERMINATED`
+      - `hire_date` DATE
+      - `termination_date` DATE
+      - `base_salary` NUMERIC(15,2)
+      - `currency` VARCHAR(3) DEFAULT 'MZN'
+      - `notes` TEXT
+      - campos de auditoria
+      - soft delete: `deleted_at`, `deleted_by`
+    - Criar tabela `salary_payments`:
+      - `id` UUID PK
+      - `employee_id` UUID NOT NULL FK para `employees(id)`
+      - `period_year` INT NOT NULL
+      - `period_month` INT NOT NULL CHECK entre 1 e 12
+      - `gross_amount` NUMERIC(15,2) NOT NULL
+      - `net_amount` NUMERIC(15,2) NOT NULL
+      - `paid_amount` NUMERIC(15,2) NOT NULL
+      - `currency` VARCHAR(3) DEFAULT 'MZN'
+      - `payment_date` DATE NOT NULL
+      - `payment_method` VARCHAR(30) com CHECK: `BANK_TRANSFER`, `CASH`, `MOBILE_MONEY`, `OTHER`
+      - `reference` VARCHAR(100)
+      - `status` VARCHAR(30) NOT NULL com CHECK: `PAID`, `CANCELLED`
+      - `notes` TEXT
+      - campos de auditoria
+      - UNIQUE em `(employee_id, period_year, period_month)`
+    - Criar índices:
+      - `idx_employee_functions_code`
+      - `idx_employees_number`
+      - `idx_employees_status`
+      - `idx_employees_function`
+      - `idx_salary_payments_employee`
+      - `idx_salary_payments_period`
+      - `idx_salary_payments_status`
+  - Atualizar o módulo `driver` para deixar de consultar RH externo:
+    - Adicionar coluna opcional `employee_id` na tabela `drivers`
+    - Criar FK `drivers.employee_id -> employees.id`
+    - Criar índice `idx_drivers_employee`
+    - Garantir que um motorista pode ser associado a um funcionário interno
+    - Na criação/atualização de motorista, permitir informar `employeeId`
+    - Validar que o funcionário associado existe e está `ACTIVE`
+    - Validar, quando aplicável, que a função do funcionário é compatível com motorista, por exemplo código `DRIVER` ou `MOTORISTA`
+  - Implementar entidades JPA do módulo `hr`:
+    - Criar `EmployeeFunction.java`
+    - Criar `Employee.java`
+    - Criar `SalaryPayment.java`
+    - Usar `@EntityListeners(AuditingEntityListener.class)`
+    - Usar `@SQLRestriction("deleted_at IS NULL")` em `Employee`
+    - Implementar método `softDelete(String deletedBy)` em `Employee`
+  - Criar enums em `shared/enums` ou em `hr/domain/enums`:
+    - `EmployeeStatus`: `ACTIVE`, `INACTIVE`, `SUSPENDED`, `TERMINATED`
+    - `SalaryPaymentStatus`: `PAID`, `CANCELLED`
+    - `PaymentMethod`: `BANK_TRANSFER`, `CASH`, `MOBILE_MONEY`, `OTHER`
+  - Implementar repositórios do módulo `hr`:
+    - `EmployeeFunctionRepository`
+      - `findByCode(String code)`
+      - `existsByCode(String code)`
+      - `findByIsActiveTrue(Pageable pageable)`
+    - `EmployeeRepository`
+      - `findByEmployeeNumber(String employeeNumber)`
+      - `existsByEmployeeNumber(String employeeNumber)`
+      - `existsByIdNumber(String idNumber)`
+      - `findAllByFilters(status, functionId, q, Pageable)`
+    - `SalaryPaymentRepository`
+      - `findByEmployeeId(UUID employeeId, Pageable pageable)`
+      - `findByPeriodYearAndPeriodMonth(int year, int month, Pageable pageable)`
+      - `existsByEmployeeIdAndPeriodYearAndPeriodMonth(UUID employeeId, int year, int month)`
+      - `findPaidEmployeeIdsByPeriod(int year, int month)`
+  - Implementar serviços do módulo `hr`:
+    - `EmployeeFunctionService`
+      - `createFunction(EmployeeFunctionCreateDto)`
+      - `updateFunction(UUID id, EmployeeFunctionUpdateDto)`
+      - `activate(UUID id)`
+      - `deactivate(UUID id)`
+      - `listFunctions(Pageable pageable)`
+    - `EmployeeService`
+      - `createEmployee(EmployeeCreateDto)`
+      - `updateEmployee(UUID id, EmployeeUpdateDto)`
+      - `updateStatus(UUID id, EmployeeStatus status)`
+      - `deleteEmployee(UUID id)`
+      - `getEmployee(UUID id)`
+      - `listEmployees(filters, Pageable pageable)`
+      - Validar unicidade de `employeeNumber`
+      - Validar unicidade de `idNumber`, quando informado
+    - `SalaryPaymentService`
+      - `registerPayment(SalaryPaymentCreateDto)`
+      - Impedir pagamento duplicado para o mesmo funcionário no mesmo mês/ano
+      - Validar que funcionário existe e está `ACTIVE`
+      - Validar que `paidAmount`, `grossAmount` e `netAmount` são maiores que zero
+      - `cancelPayment(UUID paymentId, String reason)`
+      - `listPayments(year, month, employeeId, Pageable pageable)`
+      - `getPaymentStatus(int year, int month, PaymentStatusFilter filter, Pageable pageable)`
+      - `getPaymentStatus()` deve retornar funcionários ativos com estado calculado:
+        - `PAID` quando existir pagamento ativo para o período
+        - `UNPAID` quando não existir pagamento para o período
+  - Implementar DTOs do módulo `hr`:
+    - `EmployeeFunctionCreateDto`
+    - `EmployeeFunctionUpdateDto`
+    - `EmployeeFunctionResponseDto`
+    - `EmployeeCreateDto`
+    - `EmployeeUpdateDto`
+    - `EmployeeResponseDto`
+    - `SalaryPaymentCreateDto`
+    - `SalaryPaymentResponseDto`
+    - `EmployeePaymentStatusDto`
+      - `employeeId`
+      - `employeeNumber`
+      - `fullName`
+      - `functionName`
+      - `periodYear`
+      - `periodMonth`
+      - `paymentStatus`
+      - `paidAmount`
+      - `paymentDate`
+      - `paymentReference`
+  - Implementar mappers MapStruct:
+    - `EmployeeFunctionMapper`
+    - `EmployeeMapper`
+    - `SalaryPaymentMapper`
+  - Implementar controllers REST do módulo `hr`:
+    - `EmployeeFunctionController`
+      - `POST /api/v1/hr/functions`
+      - `GET /api/v1/hr/functions`
+      - `GET /api/v1/hr/functions/{id}`
+      - `PUT /api/v1/hr/functions/{id}`
+      - `PATCH /api/v1/hr/functions/{id}/activate`
+      - `PATCH /api/v1/hr/functions/{id}/deactivate`
+    - `EmployeeController`
+      - `POST /api/v1/hr/employees`
+      - `GET /api/v1/hr/employees`
+      - `GET /api/v1/hr/employees/{id}`
+      - `PUT /api/v1/hr/employees/{id}`
+      - `PATCH /api/v1/hr/employees/{id}/status`
+      - `DELETE /api/v1/hr/employees/{id}`
+    - `SalaryPaymentController`
+      - `POST /api/v1/hr/salary-payments`
+      - `GET /api/v1/hr/salary-payments`
+      - `GET /api/v1/hr/salary-payments/{id}`
+      - `PATCH /api/v1/hr/salary-payments/{id}/cancel`
+      - `GET /api/v1/hr/salary-payments/status?year={year}&month={month}&status=PAID|UNPAID|ALL`
+    - Todos os endpoints devem retornar `ApiResponse<T>` e `PagedResponse<T>` quando aplicável
+  - Configurar RBAC:
+    - `ADMIN`: acesso total ao módulo RH
+    - `GESTOR_RH`: criar/editar funcionários, funções e pagamentos
+    - `GESTOR_FROTA`: consultar funcionários e funções, mas não registar pagamentos
+    - `OPERADOR`: consulta limitada de funcionários ativos
+    - `AUDITOR`: consulta de funcionários, funções e pagamentos, sem escrita
+    - `MOTORISTA`: sem acesso ao módulo RH administrativo
+  - Atualizar `AllocationValidationService`:
+    - Remover o passo de chamada ao RH externo
+    - Substituir validação de disponibilidade RH por validação interna:
+      - Verificar se o motorista tem `employeeId` associado
+      - Verificar se o funcionário existe
+      - Verificar se o funcionário está `ACTIVE`
+      - Verificar se a função do funcionário é compatível com motorista, quando essa regra estiver configurada
+    - Criar bloqueios novos:
+      - `DRIVER_EMPLOYEE_NOT_LINKED`
+      - `EMPLOYEE_NOT_FOUND`
+      - `EMPLOYEE_INACTIVE`
+      - `EMPLOYEE_FUNCTION_NOT_ALLOWED_FOR_DRIVER`
+    - Não usar pagamento salarial como bloqueio de alocação operacional; pagamento é informação administrativa e não deve impedir automaticamente uma atividade logística
+  - Atualizar testes antigos relacionados ao RH:
+    - Remover testes do `RhRestAdapter`
+    - Remover testes de cache de disponibilidade RH
+    - Remover testes do webhook RH
+    - Atualizar testes do `DriverService` para validar associação com funcionário interno
+    - Atualizar testes do `AllocationValidationService` para cobrir:
+      - motorista sem `employeeId`
+      - funcionário inexistente
+      - funcionário `INACTIVE`
+      - funcionário `SUSPENDED`
+      - funcionário ativo com função permitida
+  - Escrever testes do módulo `hr`:
+    - Testar criação de função com código duplicado retorna `BusinessException`
+    - Testar criação de funcionário com `employeeNumber` duplicado retorna `BusinessException`
+    - Testar criação de funcionário com função inexistente retorna 404
+    - Testar registo de pagamento salarial com período duplicado retorna `BusinessException`
+    - Testar consulta de pagamentos do mês retorna funcionários `PAID`
+    - Testar consulta de não pagos retorna funcionários ativos sem pagamento no período
+    - Testar cancelamento de pagamento muda status para `CANCELLED`
+    - Testar endpoints REST com Testcontainers e PostgreSQL real
+  - Atualizar frontend web Next.js:
+    - Adicionar item de menu `RH`
+    - Criar páginas:
+      - `/hr/functions`
+      - `/hr/employees`
+      - `/hr/salary-payments`
+      - `/hr/salary-payments/status`
+    - Atualizar formulário de motorista para permitir associar `employeeId`
+    - Remover componentes relacionados à disponibilidade RH externa
+  - Atualizar documentação:
+    - Atualizar C4 Container/Component para incluir módulo interno `hr`
+    - Atualizar README removendo dependência de sistema externo de RH
+    - Atualizar OpenAPI/Swagger com endpoints `/api/v1/hr/**`
+    - Documentar que o módulo RH do TMS é simples e cobre apenas:
+      - cadastro de funcionários
+      - cadastro de funções
+      - registo de pagamentos salariais
+      - consulta de funcionários pagos e não pagos por período
+    - Documentar explicitamente que o módulo RH não implementa payroll completo, cálculo automático de impostos, INSS, IRPS, férias, assiduidade ou processamento salarial avançado
+  - _Requisitos impactados: 6.1, 6.6, 7.1, 7.2, 7.3, 7.4, 7.5, 9.1, 9.4, 9.8, 14.5, 15.1, 17.3_
 
 ### Fase 3 — Módulo Driver (Semanas 6–7)
 

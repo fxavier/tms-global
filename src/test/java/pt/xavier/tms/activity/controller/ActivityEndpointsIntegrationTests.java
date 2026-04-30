@@ -1,7 +1,5 @@
 package pt.xavier.tms.activity.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -18,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -34,8 +31,6 @@ import pt.xavier.tms.activity.entity.Activity;
 import pt.xavier.tms.activity.repository.ActivityRepository;
 import pt.xavier.tms.driver.entity.Driver;
 import pt.xavier.tms.driver.repository.DriverRepository;
-import pt.xavier.tms.integration.dto.DriverAvailabilityDto;
-import pt.xavier.tms.integration.port.RhIntegrationPort;
 import pt.xavier.tms.shared.enums.ActivityStatus;
 import pt.xavier.tms.shared.enums.DriverStatus;
 import pt.xavier.tms.shared.enums.VehicleStatus;
@@ -67,9 +62,6 @@ class ActivityEndpointsIntegrationTests {
     private VehicleRepository vehicleRepository;
     @Autowired
     private DriverRepository driverRepository;
-
-    @MockBean
-    private RhIntegrationPort rhIntegrationPort;
 
     @DynamicPropertySource
     static void datasourceProperties(DynamicPropertyRegistry registry) {
@@ -118,9 +110,6 @@ class ActivityEndpointsIntegrationTests {
     @Test
     @WithMockUser(roles = "OPERADOR")
     void allocateWithVehicleInMaintenanceReturns422() throws Exception {
-        when(rhIntegrationPort.checkAvailability(any(), any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(new DriverAvailabilityDto(UUID.randomUUID(), true, null, List.of()));
-
         UUID vehicleId = createVehicle(VehicleStatus.EM_MANUTENCAO);
         UUID driverId = createDriver(DriverStatus.ATIVO);
         UUID activityId = createActivity();

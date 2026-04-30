@@ -1,12 +1,10 @@
 package pt.xavier.tms.driver.service;
 
-import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,11 +13,11 @@ import pt.xavier.tms.driver.dto.DriverCreateDto;
 import pt.xavier.tms.driver.dto.DriverUpdateDto;
 import pt.xavier.tms.driver.entity.Driver;
 import pt.xavier.tms.driver.repository.DriverRepository;
-import pt.xavier.tms.integration.dto.DriverAvailabilityDto;
-import pt.xavier.tms.integration.exception.RhIntegrationException;
-import pt.xavier.tms.integration.port.RhIntegrationPort;
+import pt.xavier.tms.hr.entity.Employee;
+import pt.xavier.tms.hr.repository.EmployeeRepository;
 import pt.xavier.tms.shared.enums.AuditOperation;
 import pt.xavier.tms.shared.enums.DriverStatus;
+import pt.xavier.tms.shared.enums.EmployeeStatus;
 import pt.xavier.tms.shared.exception.BusinessException;
 import pt.xavier.tms.shared.exception.ResourceNotFoundException;
 
@@ -29,20 +27,20 @@ import pt.xavier.tms.shared.exception.ResourceNotFoundException;
 public class DriverService {
 
     private static final String DRIVER_ENTITY_TYPE = "DRIVER";
+    private static final String[] ALLOWED_DRIVER_FUNCTION_CODES = {"DRIVER", "MOTORISTA"};
 
     private final DriverRepository driverRepository;
-    private final RhIntegrationPort rhIntegrationPort;
+    private final EmployeeRepository employeeRepository;
 
-    public DriverService(DriverRepository driverRepository, RhIntegrationPort rhIntegrationPort) {
+    public DriverService(DriverRepository driverRepository, EmployeeRepository employeeRepository) {
         this.driverRepository = driverRepository;
-        this.rhIntegrationPort = rhIntegrationPort;
+        this.employeeRepository = employeeRepository;
     }
 
     @Auditable(entityType = DRIVER_ENTITY_TYPE, operation = AuditOperation.CRIACAO)
     @Transactional
     public Driver createDriver(DriverCreateDto dto) {
         validateCreateUniqueness(dto.idNumber(), dto.licenseNumber());
-
         Driver driver = new Driver();
         applyCreateDto(driver, dto);
         driver.setStatus(dto.status() == null ? DriverStatus.ATIVO : dto.status());
@@ -81,15 +79,6 @@ public class DriverService {
         return driverRepository.findAllByFilters(status, blankToNull(location), pageable);
     }
 
-    public DriverAvailabilityDto getAvailability(UUID driverId, LocalDate startDate, LocalDate endDate) {
-        getDriver(driverId);
-        try {
-            return rhIntegrationPort.checkAvailability(driverId, startDate, endDate);
-        } catch (RhIntegrationException ex) {
-            return new DriverAvailabilityDto(driverId, false, "RH_SYSTEM_UNAVAILABLE", List.of());
-        }
-    }
-
     private void validateCreateUniqueness(String idNumber, String licenseNumber) {
         if (driverRepository.existsByIdNumber(idNumber)) {
             throw new BusinessException("DUPLICATE_DRIVER_ID_NUMBER", "Driver id number already exists");
@@ -111,7 +100,7 @@ public class DriverService {
         }
     }
 
-    private static void applyCreateDto(Driver driver, DriverCreateDto dto) {
+    private void applyCreateDto(Driver driver, DriverCreateDto dto) {
         driver.setFullName(dto.fullName());
         driver.setPhone(dto.phone());
         driver.setAddress(dto.address());
@@ -121,10 +110,11 @@ public class DriverService {
         driver.setLicenseIssueDate(dto.licenseIssueDate());
         driver.setLicenseExpiryDate(dto.licenseExpiryDate());
         driver.setActivityLocation(dto.activityLocation());
+        driver.setEmployee(resolveAndValidateEmployee(dto.employeeId()));
         driver.setNotes(dto.notes());
     }
 
-    private static void applyUpdateDto(Driver driver, DriverUpdateDto dto) {
+    private void applyUpdateDto(Driver driver, DriverUpdateDto dto) {
         driver.setFullName(dto.fullName());
         driver.setPhone(dto.phone());
         driver.setAddress(dto.address());
@@ -134,7 +124,36 @@ public class DriverService {
         driver.setLicenseIssueDate(dto.licenseIssueDate());
         driver.setLicenseExpiryDate(dto.licenseExpiryDate());
         driver.setActivityLocation(dto.activityLocation());
+        driver.setEmployee(resolveAndValidateEmployee(dto.employeeId()));
         driver.setNotes(dto.notes());
+    }
+
+    private Employee resolveAndValidateEmployee(UUID employeeId) {
+        if (employeeId == null) {
+            return null;
+        }
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("EMPLOYEE_NOT_FOUND", "Employee not found"));
+        if (employee.getStatus() != EmployeeStatus.ACTIVE) {
+            throw new BusinessException("EMPLOYEE_NOT_ACTIVE", "Associated employee must be ACTIVE");
+        }
+        if (employee.getFunction() != null && employee.getFunction().getCode() != null) {
+            String normalizedCode = employee.getFunction().getCode().trim().toUpperCase();
+            boolean allowed = false;
+            for (String code : ALLOWED_DRIVER_FUNCTION_CODES) {
+                if (code.equals(normalizedCode)) {
+                    allowed = true;
+                    break;
+                }
+            }
+            if (!allowed) {
+                throw new BusinessException(
+                        "EMPLOYEE_FUNCTION_NOT_ALLOWED_FOR_DRIVER",
+                        "Associated employee function is not allowed for driver"
+                );
+            }
+        }
+        return employee;
     }
 
     private static String blankToNull(String value) {

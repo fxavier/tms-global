@@ -2,9 +2,10 @@
         allowedDependencies = {
                 "shared",
                 "vehicle",
+                "hr::entity",
+                "hr::repository",
                 "audit::annotation",
-                "integration::port",
-                "integration::dto"
+                "integration"
         }
 )
 package pt.xavier.tms.driver;

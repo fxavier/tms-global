@@ -22,6 +22,7 @@ final class DriverDtoMapper {
                 driver.getLicenseIssueDate(),
                 driver.getLicenseExpiryDate(),
                 driver.getActivityLocation(),
+                driver.getEmployee() != null ? driver.getEmployee().getId() : null,
                 driver.getStatus(),
                 driver.getNotes()
         );

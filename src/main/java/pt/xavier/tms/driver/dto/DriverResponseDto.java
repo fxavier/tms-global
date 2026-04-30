@@ -16,6 +16,7 @@ public record DriverResponseDto(
         LocalDate licenseIssueDate,
         LocalDate licenseExpiryDate,
         String activityLocation,
+        UUID employeeId,
         DriverStatus status,
         String notes
 ) {

@@ -64,7 +64,7 @@ public class VehicleController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN','GESTOR_FROTA','OPERADOR','AUDITOR','MOTORISTA','RH_INTEGRADOR')")
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR_FROTA','OPERADOR','AUDITOR','MOTORISTA')")
     public ApiResponse<PagedResponse<VehicleResponseDto>> searchVehicles(
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
