@@ -418,6 +418,107 @@ security/
 
 ---
 
+### 2.9 Módulo `user`
+
+**Responsabilidade:** Gestão de utilizadores do TMS — criação, listagem, atualização, ativação/desativação e reset de password. Toda a persistência de utilizadores é delegada ao Keycloak via Keycloak Admin API. O módulo não mantém uma tabela própria de utilizadores na base de dados do TMS — o Keycloak é a fonte de verdade.
+
+**Dependências permitidas:** `shared`, `audit` (via evento).
+
+**Comunicação:**
+
+- Chama `KeycloakAdminClient` diretamente para operações CRUD de utilizadores no Keycloak.
+- Publica `AuditEvent` via Spring Modulith Events para todas as operações de escrita.
+
+**Estrutura de pacotes:**
+
+```
+user/
+  controller/
+    UserController.java
+  service/
+    UserService.java
+    KeycloakUserAdapter.java
+    SuperuserInitializer.java
+  dto/
+    UserCreateDto.java
+    UserUpdateDto.java
+    UserResponseDto.java
+    UserRoleAssignDto.java
+    PasswordResetRequestDto.java
+  config/
+    KeycloakAdminConfig.java
+```
+
+**Fluxo de provisionamento do SUPERUSER:**
+
+```
+[Arranque da aplicação]
+        ↓
+[SuperuserInitializer.@PostConstruct]
+        ↓
+[Verifica se utilizador SUPERUSER existe no Keycloak]
+        ↓ Não existe
+[Cria utilizador com credenciais de TMS_SUPERUSER_USERNAME / TMS_SUPERUSER_PASSWORD]
+        ↓
+[Atribui role SUPERUSER no realm]
+        ↓
+[Regista evento de auditoria CRIACAO]
+```
+
+**Fluxo de login (web):**
+
+```
+[Utilizador acede à app web]
+        ↓
+[Redireciona para Keycloak Authorization Code Flow]
+        ↓
+[Utilizador autentica no Keycloak]
+        ↓
+[Keycloak emite access_token (JWT) + refresh_token]
+        ↓
+[Frontend armazena tokens em memória / httpOnly cookie]
+        ↓
+[Pedidos à API incluem Authorization: Bearer {access_token}]
+        ↓
+[Spring Security valida JWT via JWKS endpoint do Keycloak]
+```
+
+**Fluxo de logout:**
+
+```
+[Utilizador clica Logout]
+        ↓
+[Frontend chama Keycloak end_session_endpoint]
+        ↓
+[Keycloak invalida sessão e refresh_token (token revocation)]
+        ↓
+[Single Logout: todas as sessões ativas do utilizador são invalidadas]
+        ↓
+[Redireciona para página de login]
+```
+
+**Fluxo de reset de password:**
+
+```
+[Utilizador clica "Esqueci a password"]
+        ↓
+[Introduz email]
+        ↓
+[TMS chama Keycloak Admin API: executeActionsEmail com action RESET_PASSWORD]
+        ↓
+[Keycloak envia email com link de reset (validade 1 hora)]
+        ↓
+[Utilizador clica no link → Keycloak apresenta formulário de nova password]
+        ↓
+[Keycloak valida política de password e persiste nova password]
+        ↓
+[Keycloak invalida todas as sessões ativas do utilizador]
+        ↓
+[TMS regista evento de auditoria PASSWORD_RESET]
+```
+
+---
+
 ## 3. Modelo de Dados PostgreSQL
 
 ### 3.1 Convenções
@@ -1713,6 +1814,32 @@ public class AuditLog {
 ---
 
 ## 6. APIs REST — Endpoints Completos
+
+### 6.0 Módulo User — Gestão de Utilizadores e Autenticação
+
+> **Nota:** O login, logout e reset de password são fluxos OIDC geridos pelo Keycloak. Os endpoints abaixo são os que o TMS expõe para gestão administrativa de utilizadores via Keycloak Admin API.
+
+| Método   | Path                                        | Roles                        | Descrição                                                    |
+| -------- | ------------------------------------------- | ---------------------------- | ------------------------------------------------------------ |
+| `POST`   | `/api/v1/users`                             | `ADMIN`, `SUPERUSER`         | Criar utilizador (provisiona no Keycloak)                    |
+| `GET`    | `/api/v1/users`                             | `ADMIN`, `SUPERUSER`         | Listar utilizadores (filtros: role, estado, q)               |
+| `GET`    | `/api/v1/users/{id}`                        | `ADMIN`, `SUPERUSER`         | Detalhe de utilizador                                        |
+| `PUT`    | `/api/v1/users/{id}`                        | `ADMIN`, `SUPERUSER`         | Atualizar dados e roles de utilizador                        |
+| `PATCH`  | `/api/v1/users/{id}/enable`                 | `ADMIN`, `SUPERUSER`         | Ativar utilizador                                            |
+| `PATCH`  | `/api/v1/users/{id}/disable`                | `ADMIN`, `SUPERUSER`         | Desativar utilizador (invalida sessões ativas)               |
+| `POST`   | `/api/v1/users/{id}/reset-password`         | `ADMIN`, `SUPERUSER`         | Forçar reset de password (envia email via Keycloak)          |
+| `GET`    | `/api/v1/users/me`                          | Qualquer utilizador autenticado | Perfil do utilizador autenticado                          |
+
+**Endpoints de autenticação (delegados ao Keycloak — não implementados no TMS):**
+
+| Fluxo                  | Endpoint Keycloak                                                              | Descrição                                  |
+| ---------------------- | ------------------------------------------------------------------------------ | ------------------------------------------ |
+| Login (web)            | `GET /realms/tms/protocol/openid-connect/auth`                                 | Authorization Code Flow                    |
+| Login (mobile)         | `GET /realms/tms/protocol/openid-connect/auth` (com PKCE)                      | Authorization Code Flow + PKCE             |
+| Token exchange         | `POST /realms/tms/protocol/openid-connect/token`                               | Troca code por access_token + refresh_token |
+| Refresh token          | `POST /realms/tms/protocol/openid-connect/token` (grant_type=refresh_token)    | Renovação de access_token                  |
+| Logout                 | `GET /realms/tms/protocol/openid-connect/logout`                               | Invalidação de sessão + token revocation   |
+| Reset password (self)  | `POST /realms/tms/login-actions/reset-credentials`                             | Fluxo self-service via email               |
 
 ### 6.1 Módulo Vehicle
 
@@ -3433,8 +3560,11 @@ tms:
 
 **Client:** `tms-backend` (confidential, bearer-only)
 
+**Client adicional:** `tms-admin-cli` (confidential, service account com role `realm-management/manage-users` e `realm-management/view-users`) — usado pelo `KeycloakAdminClient` para gestão de utilizadores via Admin API.
+
 **Roles a criar no Realm:**
 
+- `SUPERUSER`
 - `ADMIN`
 - `GESTOR_FROTA`
 - `OPERADOR`
@@ -3446,6 +3576,189 @@ tms:
 **Client Scopes:** `openid`, `profile`, `email`, `roles`
 
 **Mapper:** `realm roles` → `realm_access.roles` (incluído por defeito no Keycloak)
+
+**Políticas de password (configuradas no Realm):**
+
+- Comprimento mínimo: 8 caracteres
+- Pelo menos 1 letra maiúscula
+- Pelo menos 1 letra minúscula
+- Pelo menos 1 dígito
+- Pelo menos 1 carácter especial
+- Histórico de passwords: últimas 5 não reutilizáveis
+
+**Brute Force Protection (configurado no Realm):**
+
+- Máximo de tentativas falhadas: 5
+- Tempo de espera após bloqueio: 15 minutos
+- Desbloqueio manual disponível para `ADMIN` e `SUPERUSER`
+
+### 12.8 KeycloakAdminConfig — Configuração do Admin Client
+
+```java
+// user/config/KeycloakAdminConfig.java
+@Configuration
+@ConfigurationProperties(prefix = "tms.keycloak.admin")
+@Getter @Setter
+public class KeycloakAdminConfig {
+
+    private String serverUrl;       // https://keycloak.company.pt
+    private String realm;           // tms
+    private String clientId;        // tms-admin-cli
+    private String clientSecret;    // segredo do service account
+
+    @Bean
+    public Keycloak keycloakAdminClient() {
+        return KeycloakBuilder.builder()
+            .serverUrl(serverUrl)
+            .realm(realm)
+            .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
+            .clientId(clientId)
+            .clientSecret(clientSecret)
+            .build();
+    }
+
+    @Bean
+    public RealmResource tmsRealmResource(Keycloak keycloak) {
+        return keycloak.realm(realm);
+    }
+}
+```
+
+**Dependência Maven a adicionar ao `pom.xml`:**
+
+```xml
+<dependency>
+    <groupId>org.keycloak</groupId>
+    <artifactId>keycloak-admin-client</artifactId>
+    <version>24.0.4</version>
+</dependency>
+```
+
+### 12.9 UserService — Operações de Gestão de Utilizadores
+
+```java
+// user/service/UserService.java
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class UserService {
+
+    private final RealmResource realmResource;
+    private final ApplicationEventPublisher eventPublisher;
+
+    // Criar utilizador no Keycloak e atribuir roles
+    public UserResponseDto createUser(UserCreateDto dto) {
+        // 1. Validar unicidade de username e email via Keycloak search
+        // 2. Criar UserRepresentation com enabled=true, emailVerified=false
+        // 3. Chamar realmResource.users().create(userRepresentation)
+        // 4. Obter ID do utilizador criado
+        // 5. Atribuir roles via realmResource.users().get(userId).roles().realmLevel().add(roles)
+        // 6. Enviar email de boas-vindas com ação VERIFY_EMAIL + UPDATE_PASSWORD
+        // 7. Publicar AuditEvent
+    }
+
+    // Listar utilizadores com filtros
+    public List<UserResponseDto> listUsers(String role, Boolean enabled, String q) {
+        // Usar realmResource.users().search() com filtros
+        // Filtrar por role se especificado
+    }
+
+    // Atualizar dados e roles
+    public UserResponseDto updateUser(String userId, UserUpdateDto dto) {
+        // Validar que ADMIN não atribui role SUPERUSER
+        // Atualizar UserRepresentation
+        // Sincronizar roles
+        // Publicar AuditEvent
+    }
+
+    // Ativar/desativar utilizador
+    public void setUserEnabled(String userId, boolean enabled) {
+        // Validar que utilizador não está a desativar a si próprio
+        // Atualizar enabled no Keycloak
+        // Se desativar: invalidar sessões via realmResource.users().get(userId).logout()
+        // Publicar AuditEvent
+    }
+
+    // Forçar reset de password
+    public void forcePasswordReset(String userId) {
+        // Chamar realmResource.users().get(userId).executeActionsEmail(List.of("UPDATE_PASSWORD"))
+        // Publicar AuditEvent
+    }
+}
+```
+
+### 12.10 SuperuserInitializer — Provisionamento Automático
+
+```java
+// user/service/SuperuserInitializer.java
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class SuperuserInitializer {
+
+    private final RealmResource realmResource;
+
+    @Value("${tms.superuser.username:superuser}")
+    private String superuserUsername;
+
+    @Value("${tms.superuser.password}")
+    private String superuserPassword;
+
+    @Value("${tms.superuser.email:superuser@tms.local}")
+    private String superuserEmail;
+
+    @PostConstruct
+    public void initializeSuperuser() {
+        // 1. Verificar se utilizador com username já existe
+        List<UserRepresentation> existing = realmResource.users()
+            .searchByUsername(superuserUsername, true);
+
+        if (!existing.isEmpty()) {
+            log.info("Superuser '{}' já existe no Keycloak.", superuserUsername);
+            return;
+        }
+
+        // 2. Criar utilizador
+        UserRepresentation user = new UserRepresentation();
+        user.setUsername(superuserUsername);
+        user.setEmail(superuserEmail);
+        user.setEnabled(true);
+        user.setEmailVerified(true);
+
+        CredentialRepresentation credential = new CredentialRepresentation();
+        credential.setType(CredentialRepresentation.PASSWORD);
+        credential.setValue(superuserPassword);
+        credential.setTemporary(false);
+        user.setCredentials(List.of(credential));
+
+        Response response = realmResource.users().create(user);
+        String userId = CreatedResponseUtil.getCreatedId(response);
+
+        // 3. Atribuir role SUPERUSER
+        RoleRepresentation superuserRole = realmResource.roles().get("SUPERUSER").toRepresentation();
+        realmResource.users().get(userId).roles().realmLevel().add(List.of(superuserRole));
+
+        log.info("Superuser '{}' criado com sucesso no Keycloak.", superuserUsername);
+    }
+}
+```
+
+**Variáveis de ambiente necessárias:**
+
+```yaml
+# application.yml
+tms:
+  superuser:
+    username: ${TMS_SUPERUSER_USERNAME:superuser}
+    password: ${TMS_SUPERUSER_PASSWORD}   # obrigatório — sem default
+    email: ${TMS_SUPERUSER_EMAIL:superuser@tms.local}
+  keycloak:
+    admin:
+      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+      realm: ${KEYCLOAK_REALM:tms}
+      client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:tms-admin-cli}
+      client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+```
 
 ---
 
@@ -3460,6 +3773,21 @@ tms-backend/
     ├── main/
     │   ├── java/pt/company/tms/
     │   │   ├── TmsApplication.java
+    │   │   ├── user/
+    │   │   │   ├── controller/
+    │   │   │   │   └── UserController.java
+    │   │   │   ├── service/
+    │   │   │   │   ├── UserService.java
+    │   │   │   │   ├── KeycloakUserAdapter.java
+    │   │   │   │   └── SuperuserInitializer.java
+    │   │   │   ├── dto/
+    │   │   │   │   ├── UserCreateDto.java
+    │   │   │   │   ├── UserUpdateDto.java
+    │   │   │   │   ├── UserResponseDto.java
+    │   │   │   │   ├── UserRoleAssignDto.java
+    │   │   │   │   └── PasswordResetRequestDto.java
+    │   │   │   └── config/
+    │   │   │       └── KeycloakAdminConfig.java
     │   │   ├── vehicle/
     │   │   │   ├── controller/
     │   │   │   │   ├── VehicleController.java

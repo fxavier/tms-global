@@ -47,7 +47,45 @@ management:
       exposure:
         include: health,info,metrics,prometheus
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    url: /v3/api-docs
+    disable-swagger-default-url: true
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    persist-authorization: true
+    oauth:
+      client-id: ${TMS_SWAGGER_OAUTH_CLIENT_ID:tms-api}
+      client-secret: ${TMS_SWAGGER_OAUTH_CLIENT_SECRET:Zp8WBTZbe6lX6MIYcI7YqbV9eBOFmkyd}
+      scopes:
+        - openid
+        - profile
+        - email
+
 tms:
+  user:
+    services:
+      enabled: ${TMS_USER_SERVICES_ENABLED:true}
+    controllers:
+      enabled: ${TMS_USER_CONTROLLERS_ENABLED:true}
+    superuser-init:
+      enabled: ${TMS_USER_SUPERUSER_INIT_ENABLED:false}
+  superuser:
+    username: ${TMS_SUPERUSER_USERNAME:}
+    password: ${TMS_SUPERUSER_PASSWORD:}
+    email: ${TMS_SUPERUSER_EMAIL:}
+  keycloak:
+    admin:
+      server-url: ${TMS_KEYCLOAK_ADMIN_SERVER_URL:http://localhost:8081}
+      realm: ${TMS_KEYCLOAK_ADMIN_REALM:tms}
+      client-id: ${TMS_KEYCLOAK_ADMIN_CLIENT_ID:tms-admin-cli}
+      client-secret: ${TMS_KEYCLOAK_ADMIN_CLIENT_SECRET:tms-admin-cli-secret}
+      username: ${TMS_KEYCLOAK_ADMIN_USERNAME:}
+      password: ${TMS_KEYCLOAK_ADMIN_PASSWORD:}
   storage:
     type: ${TMS_STORAGE_TYPE:local}
     max-file-size-bytes: ${TMS_STORAGE_MAX_FILE_SIZE_BYTES:10485760}

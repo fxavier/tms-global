@@ -39,7 +39,8 @@ Os perfis são geridos no Keycloak e mapeados para roles no TMS. O controlo de a
 
 | Perfil               | Descrição                      | Acesso Principal                                                                 |
 | -------------------- | ------------------------------ | -------------------------------------------------------------------------------- |
-| `ADMIN`              | Administrador do sistema       | Acesso total a todas as funcionalidades, configurações e auditoria               |
+| `SUPERUSER`          | Superutilizador do sistema     | Acesso irrestrito a tudo, incluindo gestão de utilizadores e configuração Keycloak |
+| `ADMIN`              | Administrador do sistema       | Acesso total a todas as funcionalidades, configurações, auditoria e gestão de utilizadores |
 | `GESTOR_FROTA`       | Gestor de frota e operações    | Gestão de viaturas, motoristas, atividades, manutenções, documentação            |
 | `OPERADOR`           | Operador logístico             | Criação e acompanhamento de atividades, consulta de viaturas e motoristas        |
 | `MOTORISTA`          | Motorista registado            | Consulta das suas atividades, preenchimento de checklist, registo de ocorrências |
@@ -53,7 +54,95 @@ Os perfis são geridos no Keycloak e mapeados para roles no TMS. O controlo de a
 - THE TMS SHALL rejeitar pedidos sem token JWT válido emitido pelo Keycloak com resposta HTTP 401.
 - THE TMS SHALL rejeitar pedidos com token válido mas sem permissão suficiente com resposta HTTP 403.
 - WHEN um utilizador com perfil `MOTORISTA` acede ao sistema, THE TMS SHALL restringir a visualização às suas próprias atividades e checklists.
-- THE `ADMIN` SHALL ter acesso irrestrito a todas as funcionalidades, incluindo configurações globais e registos de auditoria.
+- THE `SUPERUSER` SHALL ter acesso irrestrito a todas as funcionalidades, incluindo gestão de utilizadores, configuração do Keycloak e operações que o `ADMIN` não pode executar sobre si próprio.
+- THE `ADMIN` SHALL ter acesso irrestrito a todas as funcionalidades operacionais, incluindo criação, edição e desativação de utilizadores e atribuição de roles (exceto `SUPERUSER`).
+
+---
+
+## Requisito 0: Gestão de Utilizadores, Autenticação e Autorização
+
+### Requisito 0.1: Provisionamento de Utilizadores e Roles
+
+**User Story:** Como Administrador, quero criar e gerir utilizadores com os seus perfis de acesso, para que cada colaborador tenha acesso apenas às funcionalidades adequadas à sua função.
+
+#### Critérios de Aceitação
+
+1. THE TMS SHALL provisionar automaticamente no Keycloak, no arranque do sistema, um utilizador `SUPERUSER` com credenciais configuráveis via variáveis de ambiente (`TMS_SUPERUSER_USERNAME`, `TMS_SUPERUSER_PASSWORD`), caso não exista ainda.
+2. THE TMS SHALL criar no Keycloak, durante o arranque, todas as roles de realm necessárias: `SUPERUSER`, `ADMIN`, `GESTOR_FROTA`, `OPERADOR`, `MOTORISTA`, `TECNICO_MANUTENCAO`, `AUDITOR`, `RH_INTEGRADOR`.
+3. THE TMS SHALL expor endpoints de gestão de utilizadores acessíveis a utilizadores com perfil `ADMIN` ou `SUPERUSER`:
+   - Criar utilizador com username, email, nome completo e role(s)
+   - Listar utilizadores com filtros por role e estado
+   - Atualizar dados e roles de um utilizador
+   - Ativar/desativar um utilizador
+   - Forçar reset de password de um utilizador
+4. WHEN um utilizador é criado pelo `ADMIN`, THE TMS SHALL criar o utilizador no Keycloak via Keycloak Admin API e atribuir as roles selecionadas.
+5. THE TMS SHALL impedir que um utilizador com perfil `ADMIN` atribua ou remova a role `SUPERUSER` a qualquer utilizador.
+6. THE TMS SHALL impedir que um utilizador desative ou altere a sua própria conta.
+7. WHEN um utilizador é desativado, THE TMS SHALL desativar a conta no Keycloak, invalidando sessões ativas.
+8. THE TMS SHALL registar na auditoria todas as operações de criação, atualização, ativação e desativação de utilizadores.
+
+---
+
+### Requisito 0.2: Registo de Utilizador
+
+**User Story:** Como Administrador, quero registar novos utilizadores no sistema com as suas roles, para que possam aceder às funcionalidades adequadas.
+
+#### Critérios de Aceitação
+
+1. THE TMS SHALL permitir o registo de novos utilizadores apenas por utilizadores com perfil `ADMIN` ou `SUPERUSER` — não existe auto-registo público.
+2. WHEN um novo utilizador é registado, THE TMS SHALL armazenar: username (único), email (único), nome completo, role(s) atribuída(s) e estado (ATIVO/INATIVO).
+3. WHEN um novo utilizador é criado, THE TMS SHALL enviar um email de boas-vindas com link de definição de password inicial, com validade de 24 horas.
+4. WHEN um username ou email duplicado é submetido no registo, THE TMS SHALL rejeitar o pedido e retornar uma mensagem de erro indicando o campo duplicado.
+5. THE TMS SHALL validar que o email tem formato válido e que o username tem entre 3 e 50 caracteres alfanuméricos.
+6. THE TMS SHALL permitir a atribuição de múltiplas roles a um utilizador, desde que não conflituantes (ex.: `MOTORISTA` e `ADMIN` não devem coexistir).
+
+---
+
+### Requisito 0.3: Autenticação — Login
+
+**User Story:** Como utilizador do TMS, quero autenticar-me com as minhas credenciais para aceder às funcionalidades do sistema.
+
+#### Critérios de Aceitação
+
+1. THE TMS SHALL delegar a autenticação ao Keycloak via fluxo OIDC Authorization Code Flow para a aplicação web.
+2. THE TMS SHALL delegar a autenticação ao Keycloak via fluxo OIDC Authorization Code Flow com PKCE para a aplicação móvel Flutter.
+3. WHEN um utilizador se autentica com sucesso, THE TMS SHALL receber um token JWT (access token) e um refresh token emitidos pelo Keycloak.
+4. THE TMS SHALL validar o token JWT em cada pedido à API, verificando assinatura, expiração e emissor (`iss` claim).
+5. WHEN um token JWT expira, THE TMS SHALL suportar renovação automática via refresh token sem requerer nova autenticação interativa.
+6. WHEN as credenciais são inválidas, THE Keycloak SHALL retornar HTTP 401 com mensagem de erro genérica (sem indicar se o username ou a password estão errados).
+7. THE TMS SHALL implementar bloqueio de conta após 5 tentativas de login falhadas consecutivas, com desbloqueio automático após 15 minutos ou manual pelo `ADMIN`.
+8. THE TMS SHALL registar na auditoria todas as autenticações bem-sucedidas e falhadas, incluindo IP de origem e timestamp.
+
+---
+
+### Requisito 0.4: Autenticação — Logout
+
+**User Story:** Como utilizador do TMS, quero terminar a minha sessão de forma segura, para que o meu acesso seja revogado imediatamente.
+
+#### Critérios de Aceitação
+
+1. THE TMS SHALL suportar logout via Keycloak OIDC end_session_endpoint, invalidando a sessão no Keycloak.
+2. WHEN um utilizador faz logout, THE TMS SHALL invalidar o refresh token no Keycloak (token revocation).
+3. THE TMS SHALL suportar logout global (Single Logout) — quando um utilizador faz logout numa sessão, todas as outras sessões ativas do mesmo utilizador são invalidadas.
+4. WHEN o logout é concluído, THE TMS SHALL redirecionar o utilizador para a página de login.
+5. THE TMS SHALL registar na auditoria o evento de logout com timestamp e IP de origem.
+
+---
+
+### Requisito 0.5: Reset de Password
+
+**User Story:** Como utilizador do TMS, quero poder redefinir a minha password de forma segura, para que possa recuperar o acesso em caso de esquecimento.
+
+#### Critérios de Aceitação
+
+1. THE TMS SHALL disponibilizar um fluxo de reset de password iniciado pelo próprio utilizador, via link "Esqueci a password" na página de login.
+2. WHEN um utilizador solicita reset de password, THE TMS SHALL enviar um email com link de reset único e com validade de 1 hora, via Keycloak.
+3. WHEN o link de reset é acedido, THE TMS SHALL apresentar um formulário para definição de nova password.
+4. THE TMS SHALL validar que a nova password cumpre a política de segurança: mínimo 8 caracteres, pelo menos uma letra maiúscula, uma letra minúscula, um dígito e um carácter especial.
+5. WHEN a nova password é definida com sucesso, THE TMS SHALL invalidar o link de reset e todas as sessões ativas do utilizador.
+6. THE TMS SHALL permitir ao `ADMIN` ou `SUPERUSER` forçar o reset de password de qualquer utilizador, enviando um novo email de reset.
+7. THE TMS SHALL registar na auditoria todos os pedidos de reset de password e as alterações de password concluídas.
+8. WHEN um link de reset expirado ou inválido é acedido, THE TMS SHALL apresentar uma mensagem de erro clara e oferecer a opção de solicitar um novo link.
 
 ---
 
@@ -480,6 +569,21 @@ EM_MANUTENÇÃO → DISPONÍVEL
 | E6-T1 | Técnica | Modelo de dados: entidade AuditLog (imutável)        | Alta       |
 | E6-T2 | Técnica | Interceptor/AOP para registo automático de auditoria | Alta       |
 | E6-T3 | Técnica | Módulo Spring Modulith: `audit`                      | Alta       |
+
+### Épico 0: Gestão de Utilizadores e Autenticação
+
+| ID    | Tipo    | Descrição                                                        | Prioridade |
+| ----- | ------- | ---------------------------------------------------------------- | ---------- |
+| E0-F1 | Feature | Registo de utilizadores com roles pelo ADMIN/SUPERUSER           | Alta       |
+| E0-F2 | Feature | Login via Keycloak OIDC (web e mobile)                           | Alta       |
+| E0-F3 | Feature | Logout com invalidação de sessão (Single Logout)                 | Alta       |
+| E0-F4 | Feature | Reset de password por email (self-service e forçado por ADMIN)   | Alta       |
+| E0-F5 | Feature | Listagem e gestão de utilizadores (ativar/desativar, editar)     | Alta       |
+| E0-T1 | Técnica | Provisionamento automático de SUPERUSER e roles no Keycloak      | Alta       |
+| E0-T2 | Técnica | Integração Keycloak Admin API para gestão de utilizadores        | Alta       |
+| E0-T3 | Técnica | Configuração de políticas de password no Keycloak                | Alta       |
+| E0-T4 | Técnica | Bloqueio de conta após tentativas falhadas                       | Média      |
+| E0-T5 | Técnica | Auditoria de eventos de autenticação e gestão de utilizadores    | Alta       |
 
 ### Épico 7: Infraestrutura e Segurança
 

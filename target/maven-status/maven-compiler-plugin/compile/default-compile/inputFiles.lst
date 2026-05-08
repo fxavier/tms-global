@@ -41,6 +41,7 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/dto/AuditQueryDto.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/entity/AuditLog.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/event/AuditEvent.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/event/package-info.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/package-info.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/repository/AuditLogRepository.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/audit/service/AuditService.java
@@ -111,6 +112,8 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/jwt/KeycloakJwtAuthenticationConverter.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/package-info.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/util/SecurityUtils.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/security/util/package-info.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/config/OpenApiConfig.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/dto/ApiResponse.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/dto/PagedResponse.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/enums/AccessoryStatus.java
@@ -137,6 +140,17 @@
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/package-info.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/util/CodeGenerator.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/shared/util/DateUtils.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/config/KeycloakAdminConfig.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/config/KeycloakAdminProperties.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/controller/Pageables.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/controller/UserController.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/dto/PasswordResetRequestDto.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/dto/UserCreateDto.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/dto/UserResponseDto.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/dto/UserUpdateDto.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/package-info.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/service/SuperuserInitializer.java
+/Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/user/service/UserService.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/vehicle/controller/ChecklistController.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/vehicle/controller/FileController.java
 /Users/xavier/dev/code/Spring-modulith/tms-global/src/main/java/pt/xavier/tms/vehicle/controller/MaintenanceController.java

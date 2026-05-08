@@ -45,6 +45,53 @@ Este plano de implementação converte o design técnico do TMS numa sequência 
   - Configurar `spring.security.oauth2.resourceserver.jwt.issuer-uri` e `jwk-set-uri` no `application.yml`
   - _Requisitos: 15.1, 15.2, 15.3, 15.5_
 
+- [x] 4b. Implementar módulo `user` — Gestão de utilizadores via Keycloak Admin API
+  - Adicionar dependência `keycloak-admin-client` ao `pom.xml` (versão 24.x)
+  - Criar `KeycloakAdminConfig` com `@ConfigurationProperties(prefix="tms.keycloak.admin")`, bean `Keycloak` (client credentials com `tms-admin-cli`) e bean `RealmResource`
+  - Criar `SuperuserInitializer` com `@PostConstruct` que:
+    - Verifica se utilizador com `TMS_SUPERUSER_USERNAME` já existe no Keycloak
+    - Se não existe: cria utilizador, define password via `CredentialRepresentation`, atribui role `SUPERUSER`
+    - Regista evento de auditoria `CRIACAO` para o utilizador criado
+  - Criar `UserService` com métodos:
+    - `createUser(UserCreateDto)`: valida unicidade de username/email via Keycloak search, cria `UserRepresentation`, chama `realmResource.users().create()`, atribui roles, envia email de boas-vindas com ações `VERIFY_EMAIL` + `UPDATE_PASSWORD`, publica `AuditEvent`
+    - `listUsers(role, enabled, q)`: pesquisa via `realmResource.users().search()`, filtra por role se especificado
+    - `getUser(String userId)`: retorna `UserResponseDto` com dados e roles do utilizador
+    - `updateUser(String userId, UserUpdateDto)`: valida que `ADMIN` não atribui role `SUPERUSER`, atualiza `UserRepresentation`, sincroniza roles, publica `AuditEvent`
+    - `setUserEnabled(String userId, boolean enabled)`: valida que utilizador não está a desativar a si próprio, atualiza `enabled` no Keycloak, se desativar chama `realmResource.users().get(userId).logout()` para invalidar sessões, publica `AuditEvent`
+    - `forcePasswordReset(String userId)`: chama `realmResource.users().get(userId).executeActionsEmail(List.of("UPDATE_PASSWORD"))`, publica `AuditEvent`
+    - `getMe()`: retorna perfil do utilizador autenticado a partir do JWT
+  - Criar `UserController` com endpoints:
+    - `POST /api/v1/users` (`@PreAuthorize("hasAnyRole('ADMIN','SUPERUSER')")`)
+    - `GET /api/v1/users` (ADMIN, SUPERUSER)
+    - `GET /api/v1/users/{id}` (ADMIN, SUPERUSER)
+    - `PUT /api/v1/users/{id}` (ADMIN, SUPERUSER)
+    - `PATCH /api/v1/users/{id}/enable` (ADMIN, SUPERUSER)
+    - `PATCH /api/v1/users/{id}/disable` (ADMIN, SUPERUSER)
+    - `POST /api/v1/users/{id}/reset-password` (ADMIN, SUPERUSER)
+    - `GET /api/v1/users/me` (qualquer utilizador autenticado)
+  - Criar DTOs: `UserCreateDto` (username, email, firstName, lastName, roles, enabled), `UserUpdateDto`, `UserResponseDto` (id, username, email, firstName, lastName, roles, enabled, createdAt), `PasswordResetRequestDto`
+  - Configurar no Keycloak (via `realm-tms.json` ou script de inicialização):
+    - Client `tms-admin-cli` com service account e roles `realm-management/manage-users`, `realm-management/view-users`, `realm-management/manage-realm`
+    - Políticas de password: mínimo 8 caracteres, maiúscula, minúscula, dígito, especial, histórico de 5
+    - Brute Force Protection: 5 tentativas, bloqueio de 15 minutos
+  - Adicionar variáveis de ambiente ao `application.yml`: `tms.superuser.username`, `tms.superuser.password`, `tms.superuser.email`, `tms.keycloak.admin.*`
+  - _Requisitos: 0.1, 0.2, 0.3, 0.4, 0.5_
+
+- [ ] 4c. Escrever testes do módulo `user`
+  - [ ]\* 4c.1 Escrever testes unitários do `UserService`
+    - Testar `createUser()` com username duplicado lança `BusinessException`
+    - Testar `createUser()` com email duplicado lança `BusinessException`
+    - Testar `updateUser()` com tentativa de atribuir role `SUPERUSER` por `ADMIN` lança `BusinessException`
+    - Testar `setUserEnabled(false)` para o próprio utilizador lança `BusinessException`
+    - Testar `forcePasswordReset()` chama `executeActionsEmail` com ação `UPDATE_PASSWORD`
+    - _Requisitos: 0.1, 0.2_
+  - [ ]\* 4c.2 Escrever testes de integração dos endpoints User
+    - Testar `POST /api/v1/users` por ADMIN cria utilizador e retorna 201
+    - Testar `POST /api/v1/users` por GESTOR_FROTA retorna 403
+    - Testar `PATCH /api/v1/users/{id}/disable` invalida sessões do utilizador
+    - Testar `GET /api/v1/users/me` retorna perfil do utilizador autenticado
+    - _Requisitos: 0.1, 0.2, 0.4_
+
 - [ ] 5. Configurar Spring Boot Actuator e logging
   - Expor endpoints `health`, `info`, `metrics`, `prometheus` via `management.endpoints.web.exposure.include`
   - Configurar `management.endpoint.health.show-details: when-authorized`
@@ -57,6 +104,10 @@ Este plano de implementação converte o design técnico do TMS numa sequência 
   - Verificar que `GET /actuator/health` retorna HTTP 200 com status UP
   - Verificar que pedido sem JWT a `/api/v1/` retorna HTTP 401
   - Verificar que Flyway executa `V0__init_extensions.sql` sem erros
+  - Verificar que `SuperuserInitializer` cria o utilizador SUPERUSER no Keycloak no arranque
+  - Verificar que `POST /api/v1/users` por ADMIN cria utilizador no Keycloak com roles corretas
+  - Verificar que `GET /api/v1/users/me` retorna perfil do utilizador autenticado
+  - Verificar que login via Keycloak OIDC retorna JWT válido aceite pela API
   - Garantir que todos os testes passam, perguntar ao utilizador se surgirem dúvidas.
 
 ---
@@ -730,10 +781,21 @@ Este plano de implementação converte o design técnico do TMS numa sequência 
   - Criar `src/features/activities/StatusTransitionButton.tsx` com botões de transição de estado disponíveis para o estado atual, com `ConfirmDialog` para transições irreversíveis (CONCLUIDA, CANCELADA)
   - _Requisitos: 8.1, 8.3, 9.8, 17.3, 17.5_
 
-- [ ] 54. Implementar módulo de Alertas, Auditoria e Configurações no frontend
+- [ ] 54. Implementar módulo de Alertas, Auditoria, Configurações e Gestão de Utilizadores no frontend
   - Criar `src/app/alerts/page.tsx` com listagem de alertas ativos agrupados por severidade, filtros e botão de resolução manual
   - Criar `src/features/alerts/AlertList.tsx` com cards de alerta por severidade
   - Criar `src/features/alerts/AlertSeverityBadge.tsx` com cores por severidade
+  - Criar `src/app/audit/page.tsx` com interface de auditoria com filtros (entityType, operation, performedBy, período)
+  - Criar `src/app/settings/page.tsx` com configuração de períodos de alerta por tipo e gestão de templates de checklist
+  - Criar `src/app/users/page.tsx` com listagem de utilizadores (apenas ADMIN e SUPERUSER), filtros por role e estado
+  - Criar `src/features/users/UserTable.tsx` com colunas: username, email, nome, roles, estado, ações
+  - Criar `src/app/users/new/page.tsx` com formulário de criação de utilizador (username, email, nome, roles, estado)
+  - Criar `src/features/users/UserForm.tsx` com seleção múltipla de roles (exceto SUPERUSER para ADMIN)
+  - Criar `src/app/users/[id]/page.tsx` com detalhe do utilizador e botões de ativar/desativar e reset de password
+  - Criar `src/features/users/RoleBadge.tsx` que mapeia roles para badges com cores distintas
+  - Criar `src/app/profile/page.tsx` com perfil do utilizador autenticado (`GET /api/v1/users/me`)
+  - Adicionar item de menu `Utilizadores` na navegação lateral (visível apenas para ADMIN e SUPERUSER)
+  - _Requisitos: 0.1, 0.2, 0.4, 0.5, 11.6, 11.7, 12.4, 17.3_
   - Criar `src/app/audit/page.tsx` com tabela de registos de auditoria, filtros por entidade, operação, utilizador e período
   - Criar `src/app/settings/page.tsx` com configuração de períodos de alerta por tipo e gestão de templates de checklist
   - _Requisitos: 11.6, 11.7, 12.4, 17.3_
@@ -760,6 +822,9 @@ Este plano de implementação converte o design técnico do TMS numa sequência 
   - Verificar que feedback visual (toast) aparece em todas as operações de criação, atualização e erro
   - Verificar que pesquisa por matrícula retorna sugestões a partir de 3 caracteres
   - Verificar que interface simplificada para perfil MOTORISTA está funcional
+  - Verificar que módulo de Utilizadores é acessível apenas a ADMIN e SUPERUSER
+  - Verificar que criação de utilizador provisiona corretamente no Keycloak com roles atribuídas
+  - Verificar que desativação de utilizador invalida sessões ativas
   - Garantir que todos os testes passam, perguntar ao utilizador se surgirem dúvidas.
 
 ---
@@ -770,11 +835,15 @@ Este plano de implementação converte o design técnico do TMS numa sequência 
   - Inicializar projeto Flutter com estrutura de pastas: `lib/core/`, `lib/features/`, `lib/shared/`
   - Configurar `pubspec.yaml` com dependências: `dio`, `flutter_riverpod`, `riverpod_annotation`, `flutter_appauth`, `flutter_secure_storage`, `json_annotation`, `freezed_annotation`, `go_router`
   - Criar `lib/core/config/app_config.dart` com constantes: `apiBaseUrl`, `keycloakIssuer`, `keycloakClientId`, `keycloakRedirectUri`
-  - Criar `lib/core/auth/keycloak_service.dart` com métodos `login()` (usando `FlutterAppAuth.authorizeAndExchangeCode()`), `refreshToken()`, `logout()`, e armazenamento seguro de tokens via `FlutterSecureStorage`
-  - Criar `lib/core/auth/auth_provider.dart` com Riverpod `StateNotifierProvider` que expõe `AuthState` (accessToken, isAuthenticated) e métodos `login()`, `logout()`, `refreshToken()`
-  - Criar `lib/features/auth/login_screen.dart` com botão de login que chama `keycloakService.login()`
+  - Criar `lib/core/auth/keycloak_service.dart` com métodos:
+    - `login()`: Authorization Code Flow com PKCE via `FlutterAppAuth.authorizeAndExchangeCode()`, armazena tokens em `FlutterSecureStorage`
+    - `refreshToken()`: renova access_token via refresh_token, atualiza storage
+    - `logout()`: chama Keycloak `end_session_endpoint` para invalidar sessão no servidor, remove tokens do storage
+  - Criar `lib/core/auth/auth_provider.dart` com Riverpod `StateNotifierProvider` que expõe `AuthState` (accessToken, isAuthenticated, userRoles) e métodos `login()`, `logout()`, `refreshToken()`
+  - Criar `lib/features/auth/login_screen.dart` com botão de login que chama `keycloakService.login()` e apresenta indicador de carregamento
+  - Criar `lib/features/auth/logout_button.dart` com botão de logout acessível no menu da app
   - Configurar `go_router` com redirecionamento para `/login` quando não autenticado
-  - _Requisitos: 18.1, 18.2, 15.1_
+  - _Requisitos: 0.3, 0.4, 18.1, 18.2, 15.1_
 
 - [ ] 59. Implementar cliente API Dio com interceptor JWT
   - Criar `lib/core/api/api_client.dart` com instância `Dio`, interceptor de request que injeta `Authorization: Bearer {accessToken}` do `authProvider`, e interceptor de erro que tenta `refreshToken()` em caso de 401 e repete o pedido; se falhar, chama `authProvider.logout()`
@@ -837,7 +906,8 @@ Este plano de implementação converte o design técnico do TMS numa sequência 
     - _Requisitos: 18.2, 18.3_
 
 - [ ] 67. Checkpoint final — App Flutter completa
-  - Verificar que autenticação Keycloak funciona em Android
+  - Verificar que autenticação Keycloak funciona em Android (login e logout)
+  - Verificar que logout invalida sessão no Keycloak (token revocation)
   - Verificar que checklist submetida via app é processada com as mesmas validações da web
   - Verificar que pesquisa de viatura por matrícula funciona
   - Verificar que mensagens de erro claras são apresentadas em caso de falha de conectividade

@@ -16,6 +16,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - tms-network
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.2
@@ -27,6 +29,7 @@ services:
     ports:
       - '8081:8080'
     volumes:
+      - keycloak_data:/opt/keycloak/data
       - ./docker/keycloak/realm-tms.json:/opt/keycloak/data/import/realm-tms.json:ro
     healthcheck:
       test:
@@ -38,6 +41,11 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
-
+    networks:
+      - tms-network
 volumes:
   postgres_data:
+  keycloak_data:
+networks:
+  tms-network:
+    driver: bridge
